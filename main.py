@@ -18,7 +18,7 @@ from utills import myCheckpw, myBcryptEncoder
 #
 
 # 登录
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
 def login():
     """
       登录
