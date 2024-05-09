@@ -49,7 +49,7 @@ def login():
         # 表名为老师
         user = Instructor.query.filter(Instructor.username == username).first()
         print("login教师:=====>" + "username:" + username + "password:" + password)
-    if type == 3:
+    if type == 2:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
 
