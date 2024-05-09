@@ -803,8 +803,8 @@ def addUser():
 
 
 # 编辑用户信息
-@app.route('/user/editlUser', methods=['POST'])
-def editlUser():
+@app.route('/user/editUser', methods=['POST'])
+def editUser():
     """
         (获取用户列表)
         ---
@@ -984,8 +984,8 @@ def editCourse():
 
 
 # 删除课程信息
-@app.route('/course/ddeleteCourse', methods=['DELETE'])
-def ddeleteCourse():
+@app.route('/course/deleteCourse', methods=['DELETE'])
+def deleteCourse():
     """
         (删除课程信息)
         ---
