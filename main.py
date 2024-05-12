@@ -52,14 +52,14 @@ def login():
     if type == 3:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
-    userInfo = [user.to_dir() for user in user]
+
     if user:
         # 判断取出的密码是否匹配
         if myCheckpw(password, user.password):
             return jsonify({
                 'code': 200,
                 'data': {'identity': type,
-                         'userInfo': user
+                         'userId': user.id
                          },
                 'msg': '登录成功'
             })
@@ -208,7 +208,7 @@ def getAssignmentByStudentId():
     print(lectureList)
     resultList = []
     for lecture in lectureList:
-        assignmentList = Assignment.query.filter(Assignment.lecture_id.in_(lectureIdList))
+        assignmentList = Assignment.query.filter(Assignment.lecture_id == lecture.id)
         # 序列化每一个类
         assignmentList = [assignment.to_dict() for assignment in assignmentList]
         # 作业map, # 教学课程map
