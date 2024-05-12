@@ -2,8 +2,11 @@ import datetime
 
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 
 app = Flask(__name__)
+origin = ['http://127.0.0.1:3000']
+CORS(app, origins=origin)
 # 配置数据库的 URI，这里使用 mySQL 数据库
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:Wei20021016@localhost:3306/stu_instru_management'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

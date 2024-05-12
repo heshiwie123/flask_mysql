@@ -18,7 +18,7 @@ from utills import myCheckpw, myBcryptEncoder
 #
 
 # 登录
-@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
 def login():
     """
       登录
@@ -143,7 +143,7 @@ def register():
 
 
 # (获取个人注册课程列表)
-@app.route('/course/getByStudentId', methods=['GET'])
+@app.route('/course/getByStudentId', methods=['POST'])
 def getByStudentId():
     """
         (获取个人注册课程列表)
@@ -177,7 +177,7 @@ def getByStudentId():
 
 
 # (获取教师发布的作业)
-@app.route('/assignment/getAssignmentByStudentId', methods=['GET'])
+@app.route('/assignment/getAssignmentByStudentId', methods=['POST'])
 def getAssignmentByStudentId():
     """
         (获取教师发布的作业)
@@ -229,7 +229,7 @@ def getAssignmentByStudentId():
 
 
 # (获取某个课程的教学班列表)
-@app.route('/lecture/getAllLectureByCourseId', methods=['GET'])
+@app.route('/lecture/getAllLectureByCourseId', methods=['POST'])
 def getAllLectureByCourseId():
     """
         (获取某个课程的教学班列表)
@@ -330,7 +330,7 @@ def submitWork():
 
 
 # (获取作业提交后的状态)
-@app.route('/submission/getsubmitWorkByStudentId', methods=['GET'])
+@app.route('/submission/getsubmitWorkByStudentId', methods=['POST'])
 def getsubmitWorkByStudentId():
     """
         (获取作业提交后的状态)
@@ -395,7 +395,7 @@ def enterEnrollment():
 
 
 # 获取所教教学班、课程列表
-@app.route('/course/getCourseAndLecture', methods=['GET'])
+@app.route('/course/getCourseAndLecture', methods=['POST'])
 def getCourseAndLecture():
     """
         (获取个人注册课程列表)
@@ -428,7 +428,7 @@ def getCourseAndLecture():
 
 
 # 获取教学班内学生列表
-@app.route('/sutdent/getStudentByInstructorId', methods=['GET'])
+@app.route('/student/getStudentByInstructorId', methods=['POST'])
 def getStudentByInstructorId():
     """
         (获取教学班内学生列表)
@@ -617,7 +617,7 @@ def updateAssignment():
 
 
 # 访问学生的提交作业
-@app.route('/submission/getsubmitWorkByInstructorId', methods=['GET'])
+@app.route('/submission/getsubmitWorkByInstructorId', methods=['POST'])
 def getsubmitWorkByInstructorId():
     """
         (访问学生的提交作业)
