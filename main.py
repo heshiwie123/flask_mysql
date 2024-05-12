@@ -52,13 +52,15 @@ def login():
     if type == 3:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
-
+    userInfo = [user.to_dir() for user in user]
     if user:
         # 判断取出的密码是否匹配
         if myCheckpw(password, user.password):
             return jsonify({
                 'code': 200,
-                'data': {'identity': type},
+                'data': {'identity': type,
+                         'userInfo': user
+                         },
                 'msg': '登录成功'
             })
 
