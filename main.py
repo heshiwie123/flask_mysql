@@ -58,7 +58,9 @@ def login():
         if myCheckpw(password, user.password):
             return jsonify({
                 'code': 200,
-                'data': {'identity': type},
+                'data': {'identity': type,
+                         'userId': user.id
+                         },
                 'msg': '登录成功'
             })
 
@@ -206,7 +208,7 @@ def getAssignmentByStudentId():
     print(lectureList)
     resultList = []
     for lecture in lectureList:
-        assignmentList = Assignment.query.filter(Assignment.lecture_id.in_(lectureIdList))
+        assignmentList = Assignment.query.filter(Assignment.lecture_id == lecture.id)
         # 序列化每一个类
         assignmentList = [assignment.to_dict() for assignment in assignmentList]
         # 作业map, # 教学课程map
