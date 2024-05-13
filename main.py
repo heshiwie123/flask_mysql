@@ -49,7 +49,7 @@ def login():
         # 表名为老师
         user = Instructor.query.filter(Instructor.username == username).first()
         print("login教师:=====>" + "username:" + username + "password:" + password)
-    if type == 3:
+    if type == 2:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
 
@@ -340,8 +340,8 @@ def submitWork():
 
 
 # (获取作业提交后的状态)
-@app.route('/submission/getsubmitWorkByStudentId', methods=['POST'])
-def getsubmitWorkByStudentId():
+@app.route('/submission/getSubmitWorkByStudentId', methods=['POST'])
+def getSubmitWorkByStudentId():
     """
         (获取作业提交后的状态)
         ---
@@ -815,8 +815,8 @@ def addUser():
 
 
 # 编辑用户信息
-@app.route('/user/editlUser', methods=['POST'])
-def editlUser():
+@app.route('/user/editUser', methods=['POST'])
+def editUser():
     """
         (获取用户列表)
         ---
@@ -996,8 +996,8 @@ def editCourse():
 
 
 # 删除课程信息
-@app.route('/course/ddeleteCourse', methods=['DELETE'])
-def ddeleteCourse():
+@app.route('/course/deleteCourse', methods=['DELETE'])
+def deleteCourse():
     """
         (删除课程信息)
         ---
