@@ -143,7 +143,7 @@ def register():
 
 
 # (获取个人注册课程列表)
-@app.route('/course/getByStudentId', methods=['POST'])
+@app.route('/course/getCourseByStudentId', methods=['POST'])
 def getByStudentId():
     """
         (获取个人注册课程列表)
@@ -166,8 +166,18 @@ def getByStudentId():
     enrollmentLectureIdList = [enrollment.lecture_id for enrollment in enrollmentList]
     # 获取教学课程
     lectureList = Lecture.query.filter(Lecture.id.in_(enrollmentLectureIdList))
-    lectureListData = [lecture.to_dict() for lecture in lectureList]
-    print(lectureListData)
+
+    # lectureList = [lecture.to_dict() for lecture in lectureList]
+    lectureListData = []
+    # 获取教师信息
+    for lecture in lectureList:
+        instructor = Instructor.query.filter(Instructor.id == lecture.instructor_id).first()
+        # 构造lectureData
+        lecture = lecture.to_dict()
+        perLectureData = {"instructorName": instructor.username, "lectureData": lecture}
+        # 包装
+        lectureListData.append(perLectureData)
+    # print(lectureListData)
     # 获取真正课程
     return jsonify({
         'code': 200,
