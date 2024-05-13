@@ -330,8 +330,8 @@ def submitWork():
 
 
 # (获取作业提交后的状态)
-@app.route('/submission/getsubmitWorkByStudentId', methods=['POST'])
-def getsubmitWorkByStudentId():
+@app.route('/submission/getSubmitWorkByStudentId', methods=['POST'])
+def getSubmitWorkByStudentId():
     """
         (获取作业提交后的状态)
         ---
