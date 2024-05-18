@@ -848,7 +848,7 @@ def editUser():
     if user:
         # 相同信息
         user.username = username
-        user.password = password
+        # user.password = password
         user.phone = phone
         user.email = email
         if major:
