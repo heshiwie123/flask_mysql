@@ -6,6 +6,8 @@ from sqlalchemy import null
 from entity.model import Admin, Student, Instructor, Course, Enrollment, Assignment, Submission, Lecture, db, app
 # 自动化文档
 from flasgger import Swagger
+# 用户类型枚举
+from Enum.UserTyprEnums import UsreType
 
 Swagger(app)
 
@@ -41,15 +43,16 @@ def login():
     password = request.form.get('password')
     type = request.form.get('type')
     type = int(type)
-    if type == 0:
+    print(type)
+    if type == UsreType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.username == username).first()
         print("login学生:=====>" + "username:" + username + "password:" + password)
-    if type == 1:
+    if type == UsreType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.username == username).first()
         print("login教师:=====>" + "username:" + username + "password:" + password)
-    if type == 3:
+    if type == UsreType.Admin.value:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
 
@@ -58,9 +61,10 @@ def login():
         if myCheckpw(password, user.password):
             return jsonify({
                 'code': 200,
-                'data': {'identity': type,
-                         'userId': user.id
-                         },
+                'data': {
+                    'identity': type,
+                    'userId': user.id
+                },
                 'msg': '登录成功'
             })
 
@@ -101,7 +105,7 @@ def register():
     department = request.form.get('department')
     type = request.form.get('type')
     type = int(type)
-    if type == 0:
+    if type == UsreType.Student.value:
         # 表名为学生
         userTest = Student.query.filter(Student.username == username).first()
         if userTest:
@@ -111,7 +115,7 @@ def register():
                 'msg': '用户已存在，请检查类型或者名字'
             })
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
-    if type == 1:
+    if type == UsreType.Instructor.value:
         # 表名为老师
         userTest = Instructor.query.filter(Instructor.username == username).first()
         if userTest:
@@ -122,7 +126,7 @@ def register():
             })
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
-    if type == 2:
+    if type == UsreType.Admin.value:
         # 表名为管理员
         userTest = Admin.query.filter(Admin.username == username).first()
         if userTest:
@@ -465,9 +469,9 @@ def getStudentByInstructorId():
         # lectureNameMap = {"lecture_name": lecture.lecture_name}
         # 获取教学班得学生列表
         studentList = (Student.query.
-                       join(Enrollment, Enrollment.student_id == Student.id).
-                       join(Lecture, Lecture.id == Enrollment.lecture_id).
-                       filter(Lecture.id == lecture.id).
+                       join(Enrollment, Enrollment.student_id == Student.id).  # 确定选课记录与学生关联
+                       join(Lecture, Lecture.id == Enrollment.lecture_id).  # 确定选课记录与课程关联
+                       filter(Lecture.id == lecture.id).  # 确定课程是我们找的课程
                        filter(Enrollment.condition != 0).all())
 
         studentListData = [student.to_dict() for student in studentList]
@@ -773,7 +777,7 @@ def addUser():
     department = request.form.get('department')
     type = request.form.get('type')
     type = int(type)
-    if type == 0:
+    if type == UsreType.Student.value:
         # 表名为学生
         userTest = Student.query.filter(Student.username == username).first()
         if userTest:
@@ -783,7 +787,7 @@ def addUser():
                 'msg': '用户已存在，请检查类型或者名字'
             })
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
-    if type == 1:
+    if type == UsreType.Instructor.value:
         # 表名为老师
         userTest = Instructor.query.filter(Instructor.username == username).first()
         if userTest:
@@ -794,7 +798,7 @@ def addUser():
             })
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
-    if type == 2:
+    if type == UsreType.Admin.value:
         # 表名为管理员
         userTest = Admin.query.filter(Admin.username == username).first()
         if userTest:
@@ -839,10 +843,10 @@ def editlUser():
     type = request.form.get('type')
     type = int(type)
 
-    if type == 0:
+    if type == UsreType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.id == userId).first()
-    if type == 1:
+    if type == UsreType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.id == userId).first()
     if user:
@@ -885,10 +889,11 @@ def deleteUser():
     # 信息接收
     userId = request.form.get('id')
     type = request.form.get('type')
-    if type == 0:
+    type = int(type)
+    if type == UsreType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.id == userId)
-    else:
+    if type == UsreType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.id == userId)
     db.session.delete(user)
