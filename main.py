@@ -7,7 +7,7 @@ from entity.model import Admin, Student, Instructor, Course, Enrollment, Assignm
 # 自动化文档
 from flasgger import Swagger
 # 用户类型枚举
-from Enum.UserTyprEnums import UsreType
+from Enum.UserTyprEnums import UserType
 
 Swagger(app)
 
@@ -44,15 +44,15 @@ def login():
     type = request.form.get('type')
     type = int(type)
     print(type)
-    if type == UsreType.Student.value:
+    if type == UserType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.username == username).first()
         print("login学生:=====>" + "username:" + username + "password:" + password)
-    if type == UsreType.Instructor.value:
+    if type == UserType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.username == username).first()
         print("login教师:=====>" + "username:" + username + "password:" + password)
-    if type == UsreType.Admin.value:
+    if type == UserType.Admin.value:
         user = Admin.query.filter(Admin.username == username).first()
         print("login管理:=====>" + "username:" + username + "password:" + password)
 
@@ -105,7 +105,7 @@ def register():
     department = request.form.get('department')
     type = request.form.get('type')
     type = int(type)
-    if type == UsreType.Student.value:
+    if type == UserType.Student.value:
         # 表名为学生
         userTest = Student.query.filter(Student.username == username).first()
         if userTest:
@@ -115,7 +115,7 @@ def register():
                 'msg': '用户已存在，请检查类型或者名字'
             })
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
-    if type == UsreType.Instructor.value:
+    if type == UserType.Instructor.value:
         # 表名为老师
         userTest = Instructor.query.filter(Instructor.username == username).first()
         if userTest:
@@ -126,7 +126,7 @@ def register():
             })
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
-    if type == UsreType.Admin.value:
+    if type == UserType.Admin.value:
         # 表名为管理员
         userTest = Admin.query.filter(Admin.username == username).first()
         if userTest:
@@ -777,7 +777,7 @@ def addUser():
     department = request.form.get('department')
     type = request.form.get('type')
     type = int(type)
-    if type == UsreType.Student.value:
+    if type == UserType.Student.value:
         # 表名为学生
         userTest = Student.query.filter(Student.username == username).first()
         if userTest:
@@ -787,7 +787,7 @@ def addUser():
                 'msg': '用户已存在，请检查类型或者名字'
             })
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
-    if type == UsreType.Instructor.value:
+    if type == UserType.Instructor.value:
         # 表名为老师
         userTest = Instructor.query.filter(Instructor.username == username).first()
         if userTest:
@@ -798,7 +798,7 @@ def addUser():
             })
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
-    if type == UsreType.Admin.value:
+    if type == UserType.Admin.value:
         # 表名为管理员
         userTest = Admin.query.filter(Admin.username == username).first()
         if userTest:
@@ -843,10 +843,10 @@ def editlUser():
     type = request.form.get('type')
     type = int(type)
 
-    if type == UsreType.Student.value:
+    if type == UserType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.id == userId).first()
-    if type == UsreType.Instructor.value:
+    if type == UserType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.id == userId).first()
     if user:
@@ -890,10 +890,10 @@ def deleteUser():
     userId = request.form.get('id')
     type = request.form.get('type')
     type = int(type)
-    if type == UsreType.Student.value:
+    if type == UserType.Student.value:
         # 表名为学生
         user = Student.query.filter(Student.id == userId)
-    if type == UsreType.Instructor.value:
+    if type == UserType.Instructor.value:
         # 表名为老师
         user = Instructor.query.filter(Instructor.id == userId)
     db.session.delete(user)
