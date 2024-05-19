@@ -222,7 +222,10 @@ def getAssignmentByStudentId():
     print(lectureList)
     resultList = []
     for lecture in lectureList:
-        assignmentList = Assignment.query.filter(Assignment.lecture_id == lecture.id)
+        assignmentList = (
+            Assignment.query.filter(Assignment.is_delete == 0)
+            .filter(Assignment.lecture_id == lecture.id)
+            .all())
         # 序列化每一个类
         assignmentList = [assignment.to_dict() for assignment in assignmentList]
         # 作业map, # 教学课程map
@@ -1075,7 +1078,12 @@ def editLecture():
     time = request.form.get('time')
     lectureName = request.form.get('lecture_name')
     status = request.form.get('status')
-    isDelete = request.form.get('is_delete')
+    is_delete = request.form.get('is_delete')
+    # 格式转换
+    if is_delete == "true" or is_delete == "1":
+        isDelete = True
+    else:
+        isDelete = False
     # 查询教学课程
     lecture = Lecture.query.filter(Lecture.id == lectureId).first()
 
@@ -1087,7 +1095,7 @@ def editLecture():
         if status:
             lecture.status = status
         if isDelete:
-            lecture.is_delete = bool(isDelete)
+            lecture.is_delete = isDelete
 
         db.session.commit()
         return jsonify({
