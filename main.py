@@ -600,7 +600,12 @@ def updateAssignment():
     title = request.form.get('title')
     deadline = request.form.get('deadline')
     description = request.form.get('description')
-    isDelete = request.form.get('is_delete')
+    is_delete = request.form.get('is_delete')
+    # 格式转换
+    if is_delete == "true" or is_delete == "1":
+        isDelete = True
+    else:
+        isDelete = False
     # 查询特定的 Assignment
     assignment = Assignment.query.filter(Assignment.id == id).first()
 
@@ -615,7 +620,7 @@ def updateAssignment():
         if description:
             assignment.description = description
         if isDelete:
-            assignment.is_delete = bool(isDelete)
+            assignment.is_delete = isDelete
 
         # 提交更新到数据库
         db.session.commit()
