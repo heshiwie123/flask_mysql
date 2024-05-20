@@ -44,12 +44,13 @@ def myCheckpw(password, encoderPassword):
         print("Password is incorrect")
         return False
 
-
+# 按传入对象列表大小增加占位符
+# [1,2,3]=====>[,%s ,%s,%s]主要用于in查询
 def myGetPlaceHolders(preDataList):
     placeholders = ', '.join(['%s'] * len(preDataList))
     return placeholders
 
-
+# 将传入对象进行转换，可序列
 def myToDir(dataList):
     dataResultList = []
     for perData in dataList:
