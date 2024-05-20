@@ -4,9 +4,9 @@ import os
 
 import hashlib
 
-
 import hashlib
 import os
+
 
 def myBcryptEncoder(password):
     # 将字符串密码转换为字节串
@@ -21,6 +21,7 @@ def myBcryptEncoder(password):
     print("加密后的密文：", encoderPassword_str)
 
     return encoderPassword_str
+
 
 def myCheckpw(password, encoderPassword):
     # 打印验证的密码明文和密文
@@ -44,4 +45,15 @@ def myCheckpw(password, encoderPassword):
         return False
 
 
+def myGetPlaceHolders(preDataList):
+    placeholders = ', '.join(['%s'] * len(preDataList))
+    return placeholders
 
+
+def myToDir(dataList):
+    dataResultList = []
+    for perData in dataList:
+        resultData = perData.to_dict()
+        dataResultList.append(resultData)
+
+    return dataResultList

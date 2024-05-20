@@ -23,7 +23,7 @@ db.update('student', data, condition)
 
 # 删除记录
 condition = "id = 10"
-db.delete('student', condition)
 
+db.delete('student', condition)
 # 关闭连接
 db.close()

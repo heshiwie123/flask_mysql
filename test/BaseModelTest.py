@@ -3,7 +3,7 @@ from mysql_connector.Entity.MyModel import Student, Submission, Admin
 from mysql_connector.mysql_config.config import db
 import datetime
 
-user = Admin(username="admin2", password="123456", phone="12346780", email="456@a.com")
+user = Admin(username="admin49", password="123456", phone="12346780", email="456@a.com")
 submission = Submission(lecture_id=1, student_id=2, title="期末作业", submit_time=datetime.datetime.now(),
                         description="666", is_delete=0)
 result = submission.save(db)  # 保存作业提交
