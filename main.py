@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 """从自定义包装类获取数据库连接"""
 from mysql_connector.Entity.MyModel import (Student, Instructor, Admin, Enrollment, Lecture, Course, Assignment,
-                                            Submission)
+                                            Submission, SubmissionFeedBack, SubmissionFeedBackDetail)
 from mysql_connector.mysql_config.config import db
 
 """从自定义密码加密获取:密码加密，密码校验,参数占位符获取"""
@@ -116,20 +116,6 @@ def register():
 # # (获取个人注册课程列表)
 @app.route('/course/getCourseByStudentId', methods=['POST'])
 def getByStudentId():
-    """
-        (获取个人注册课程列表)
-        ---
-        tags:
-          - 学生界面
-        parameters:
-          - student_id:
-
-        responses:
-          500:
-            description: Error The language is not awesome!
-          200:
-            description: A language with its awesomeness
-        """
     studentId = request.form.get('student_id')
     print("getByStudentId:" + "查询studentId:======>" + studentId)
     # 获取个人选择的教学课程
@@ -284,6 +270,30 @@ def getsubmitWorkByStudentId():
     return jsonify({
         'code': 200,
         'data': {'submissionListData': submissionListData},
+        'msg': '获取提交状态成功'
+    })
+
+
+# (获取作业反馈)
+@app.route('/submission/getSubmissionFeedBackBySubmissionId', methods=['POST'])
+def getSubmissionFeedBackBySubmissionId():
+    submissionId = request.form.get('submission_id')
+
+    # 获取反馈信息
+    submissionFeedBack = SubmissionFeedBack.query(db).filter("submission_id = %s ", submissionId).first()
+    # submissionFeedBackMap = {"submissionFeedBack": submissionFeedBack}
+    # 获取反馈详细信息列表
+    submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
+                                                                             submissionFeedBack.id ).all()
+    submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
+    # submissionFeedBackDetailListMap = {"submissionFeedBackDetailList": submissionFeedBackDetailListData}
+
+    submissionFeedBack = submissionFeedBack.to_dict()
+    resultMap = {"submissionFeedBack": submissionFeedBack,
+                 "submissionFeedBackDetailList": submissionFeedBackDetailListData}
+    return jsonify({
+        'code': 200,
+        'data': {'SubmissionFeedBackInfo': resultMap},
         'msg': '获取提交状态成功'
     })
 
@@ -500,7 +510,7 @@ def getsubmitWorkByInstructorId():
     })
 
 
-# (评分和提供反馈)
+# (评分)
 @app.route('/submission/updateSubmission', methods=['POST'])
 def updateSubmission():
     id = request.form.get('id')
@@ -527,6 +537,105 @@ def updateSubmission():
         'data': {'res': True},
         'msg': '成功评价'
     })
+
+
+# 创建反馈信息
+@app.route('/submission/addSubmissionFeedBack', methods=['PUT'])
+def addSubmissionFeedBack():
+    submissionId = request.form.get('submission_id')
+    titleInformation = request.form.get('title_information')
+    # 查询特定的 Assignment
+    submission = Submission.query(db).filter("id = %s", submissionId).first()
+    if submission:
+        # 构建反馈框架
+        submissionFeedback = SubmissionFeedBack(submission_id=submissionId, title_information=titleInformation)
+        resultId = submissionFeedback.save(db)
+        return jsonify({
+            'code': 200,
+            'data': {'submission_feedback_id': resultId},
+            'msg': '增加成功'
+        })
+    else:
+        return jsonify({
+            'code': 500,
+            'data': {'res': False},
+            'msg': '该submission不存在，请检查？'
+        })
+
+
+# 更新反馈信息
+@app.route('/submission/updateSubmissionFeedBack', methods=['POST'])
+def updateSubmissionFeedBack():
+    feedback_id = request.form.get('submission_feedback_id')
+    titleInformation = request.form.get('title_information')
+    scoreTotal = request.form.get('score_total')
+    # 格式转换
+    scoreTotal = int(scoreTotal)
+    scoreGet = request.form.get('score_get')
+    # 格式转换
+    scoreGet = int(scoreGet)
+    provisionalTotal = request.form.get('provisional_total')
+    # 格式转换
+    if provisionalTotal != '' and provisionalTotal != ' ' and provisionalTotal is not None:
+        provisionalTotal = float(provisionalTotal)
+        # 查询特定的 SubmissionFeedBack
+    submissionFeedBack = SubmissionFeedBack.query(db).filter("id = %s", feedback_id).first()
+    if submissionFeedBack:
+        # 构建反馈框架
+        if titleInformation:
+            submissionFeedBack.title_information = titleInformation
+        if scoreTotal:
+            submissionFeedBack.score_total = scoreTotal
+        if scoreGet:
+            submissionFeedBack.score_get = scoreGet
+        if provisionalTotal != '' and provisionalTotal != ' ' and provisionalTotal is not None:
+            submissionFeedBack.provisional_total = provisionalTotal
+        else:
+            submissionFeedBack.provisional_total = float(scoreGet / scoreTotal)
+        resultId = submissionFeedBack.update(db)
+        return jsonify({
+            'code': 200,
+            'data': {'submission_feedback_id': resultId},
+            'msg': '更新成功'
+        })
+    else:
+        return jsonify({
+            'code': 500,
+            'data': {'res': False},
+            'msg': '该SubmissionFeedBack不存在，请检查submission_feedback_id？'
+        })
+
+
+# 创建反馈详细信息
+@app.route('/submission/addSubmissionFeedBackDetail', methods=['PUT'])
+def addSubmissionFeedBackDetail():
+    submissionFeedBackId = request.form.get('submission_feedback_id')
+    criteria = request.form.get('criteria')
+    comment = request.form.get('comment')
+    scoreSum = request.form.get('score_sum')
+    scoreSum = int(scoreSum)
+    scoreGet = request.form.get('score_get')
+    scoreGet = int(scoreGet)
+
+    # 查询特定的 SubmissionFeedBack
+    submissionFeedBack = SubmissionFeedBack.query(db).filter("id = %s", submissionFeedBackId).first()
+    if submissionFeedBack:
+        # 构建反馈框架
+        submissionFeedbackDetail = SubmissionFeedBackDetail(criteria=criteria, comment=comment, score_sum=scoreSum,
+                                                            score_get=scoreGet,
+                                                            submission_feedback_id=submissionFeedBackId)
+        resultId = submissionFeedbackDetail.save(db)
+        return jsonify({
+            'code': 200,
+            'data': {'res': True},
+            'msg': '增加成功'
+        })
+    else:
+        return jsonify({
+            'code': 500,
+            'data': {'res': False},
+            'msg': '该submissionFeedBack不存在，请检查？'
+        })
 
 
 # 获取用户列表
@@ -893,7 +1002,8 @@ def addLecture():
             lecture = Lecture(instructor_id=instructorId, course_name=course.course_name, course_id=courseId, time=time,
                               lecture_name=lectureName)
         else:
-            lecture = Lecture(instructor_id=instructorId, course_name=course.course_name, course_id=courseId,time=datetime.datetime.now(),
+            lecture = Lecture(instructor_id=instructorId, course_name=course.course_name, course_id=courseId,
+                              time=datetime.datetime.now(),
                               lecture_name=lectureName)
         lecture.save(db)
         return jsonify({
@@ -911,7 +1021,6 @@ def addLecture():
 # 决定是否允许学生注册课程
 @app.route('/enrollment/decideEnterEnrollment', methods=['POST'])
 def decideEnterEnrollment():
-
     # 教学课程id
     enrollmentId = request.form.get('id')
     print("decideEnterEnrollment:" + "enrollmentId:====>" + enrollmentId)
