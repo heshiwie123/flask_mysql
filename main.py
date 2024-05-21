@@ -276,8 +276,8 @@ def submitWork():
 
 
 # (获取作业提交后的状态)
-@app.route('/submission/getsubmitWorkByStudentId', methods=['POST'])
-def getsubmitWorkByStudentId():
+@app.route('/submission/getSubmitWorkByStudentId', methods=['POST'])
+def getSubmitWorkByStudentId():
     studentId = request.form.get('student_id')
 
     submissionList = Submission.query(db).filter("student_id = %s", studentId).all()
