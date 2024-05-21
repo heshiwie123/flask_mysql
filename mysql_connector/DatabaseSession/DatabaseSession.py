@@ -2,7 +2,7 @@ import mysql.connector
 
 
 # 自定义数据库连接操作
-# 用于管理连接和执行SQL语句
+# 用于管理连接connection 和 close
 class DatabaseSession:
 
     def __init__(self, config):  # 构造方法，传入config连接配置
