@@ -41,6 +41,9 @@ class SerializerMixin:
 class Student(BaseModel, SerializerMixin):
     __tablename__ = 'student'
 
+    # Student 类的构造函数
+    # 关键是对应这其父类的 Query.all() [self.model(**item) for item in result]
+    # {username: 'Alice', password: 'password123', ...}自动分配到：username, password, phone, email, major,
     def __init__(self, username, password, phone, email, major, **entries):
         super().__init__(**entries)
         self.username = username
@@ -79,7 +82,7 @@ class Instructor(BaseModel, SerializerMixin):
 class Course(BaseModel, SerializerMixin):
     __tablename__ = 'course'
 
-    def __init__(self, course_name, description = "", **entries):
+    def __init__(self, course_name, description="", **entries):
         super().__init__(**entries)
         self.course_name = course_name
         self.description = description
@@ -89,7 +92,8 @@ class Course(BaseModel, SerializerMixin):
 class Lecture(BaseModel, SerializerMixin):
     __tablename__ = 'lecture'
 
-    def __init__(self, lecture_name, course_name, instructor_id, course_id, time = datetime.datetime.now(), status=0, is_delete= False, **entries):
+    def __init__(self, lecture_name, course_name, instructor_id, course_id, time=datetime.datetime.now(), status=0,
+                 is_delete=False, **entries):
         super().__init__(**entries)
         self.time = time
         self.lecture_name = lecture_name
@@ -117,7 +121,7 @@ class Enrollment(BaseModel, SerializerMixin):
 class Assignment(BaseModel, SerializerMixin):
     __tablename__ = 'assignment'
 
-    def __init__(self, title, deadline, description, lecture_id, is_delete= False, **entries):
+    def __init__(self, title, deadline, description, lecture_id, is_delete=False, **entries):
         super().__init__(**entries)
         self.title = title
         self.deadline = deadline
@@ -130,7 +134,7 @@ class Assignment(BaseModel, SerializerMixin):
 class Submission(BaseModel, SerializerMixin):
     __tablename__ = 'submission'
 
-    def __init__(self, title, submit_time, lecture_id, student_id, description="", is_delete= False, **entries):
+    def __init__(self, title, submit_time, lecture_id, student_id, description="", is_delete=False, **entries):
         super().__init__(**entries)
         self.title = title
         self.submit_time = submit_time
@@ -138,3 +142,30 @@ class Submission(BaseModel, SerializerMixin):
         self.student_id = student_id
         self.description = description
         self.is_delete = is_delete
+
+
+# 作业反馈实体
+class SubmissionFeedBack(BaseModel, SerializerMixin):
+    __tablename__ = 'submission_feedback'
+
+    def __init__(self, submission_id, title_information="", score_total=0, score_get=0, provisional_total=0.0,
+                 **entries):
+        super().__init__(**entries)
+        self.submission_id = submission_id
+        self.title_information = title_information
+        self.score_total = score_total
+        self.score_get = score_get
+        self.provisional_total = provisional_total
+
+
+# 作业反馈详情
+class SubmissionFeedBackDetail(BaseModel, SerializerMixin):
+    __tablename__ = 'feedback_detail'
+
+    def __init__(self, criteria="", comment="", score_sum=0, score_get=0, submission_feedback_id=0.0, **entries):
+        super().__init__(**entries)
+        self.criteria = criteria
+        self.comment = comment
+        self.score_sum = score_sum
+        self.score_get = score_get
+        self.submission_feedback_id = submission_feedback_id

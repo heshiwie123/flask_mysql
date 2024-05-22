@@ -1,0 +1,180 @@
+数据库：user_study
+
+注意：这里涉及到，图片，视频以及带有url的字段名称，都是文件的路径，而不是文件
+
+### video（视频表）
+
+```sql
+-- auto-generated definition
+create table video
+(
+    id           int unsigned                 not null
+        primary key,
+    title        varchar(64) charset utf8mb3  null,
+    brief_intro  varchar(512) charset utf8mb3 null,
+    video_url    varchar(255) charset utf8mb3 null,
+    sum_like     int unsigned                 null,
+    sum_collect  int unsigned                 null,
+    sum_share    int unsigned                 null,
+    sum_view     int unsigned                 null,
+    publish_time date                         null,
+    Payment_type boolean					  null,
+    sum_danmu    int unsigned                 null,
+    is_show      tinyint(1)                   null,
+    column_name  int                          null,
+    duration     varchar(20) charset utf8mb3  null
+);
+
+
+```
+
+### User(用户表)
+
+```sql
+-- auto-generated definition
+create table user
+(
+    id            int unsigned                 not null
+        primary key,
+    username      varchar(20) charset utf8mb3  null,
+    password      varchar(64) charset utf8mb3  null,
+    age           int unsigned default '18'    null,
+    sex           int unsigned                 null,
+    signature     varchar(64) charset utf8mb3  null,
+    profile_photo varchar(255) charset utf8mb3 null,
+    phone         varchar(16)                  null,
+    email         varchar(32) charset utf8mb3  null,
+    state         int          default 1       null,
+    sum_followed  int          default 0       null,
+    sum_following int          default 0       null,
+    is_secret     tinyint(1)   default 0       not null
+);
+
+```
+
+
+
+视频下的评论-------------------------------对于评论，这里模拟正常评论，有层主和在其底下的子评论：
+
+### video_comment(评论表)
+
+```sql
+-- auto-generated definition
+create table video_comment
+(
+    id          int unsigned                 not null
+        primary key,
+    user_id     int unsigned                 null,
+    video_id    int unsigned                 null,
+    picture_url varchar(255) charset utf8mb3 null,
+    content     varchar(255) charset utf8mb3 null,
+    time        date                         null,
+    sum_like    int unsigned                 null,
+    sum_reply   int unsigned                 null,
+    is_show     tinyint(1)                   null
+);
+```
+
+video_comment_reply(评论的子评论)
+
+```sql
+-- auto-generated definition
+create table video_comment_reply
+(
+    id          int unsigned                 not null
+        primary key,
+    user_id     int unsigned                 not null,
+    comment_id  int unsigned                 not null,
+    picture_url varchar(255) charset utf8mb3 null,
+    content     varchar(255) charset utf8mb3 null,
+    time        date                         null,
+    reply_id    int unsigned                 null,
+    sum_like    int unsigned                 null,
+    is_show     tinyint(1)                   null
+);
+```
+
+用户鉴权--------------------------------以下有包括用户鉴权部分的表，就不全部展示，展示身份与权限即可：
+
+Identity(身份表)
+
+```sql
+-- auto-generated definition
+create table identity
+(
+    id   int unsigned auto_increment
+        primary key,
+    name varchar(10) charset utf8mb3 null
+);
+```
+
+Menu(权限表)
+
+```sql
+-- auto-generated definition
+create table menu
+(
+    id        int unsigned auto_increment
+        primary key,
+    parent_id int                          null,
+    name      varchar(100) charset utf8mb3 null,
+    perms     varchar(64) charset utf8mb3  null,
+    menu_type tinyint(1) default 0         null,
+    path      varchar(64)                  not null
+);
+```
+
+视频弹幕-------------------------------这里保留弹幕功能：
+
+video_danmu
+
+```sql
+-- auto-generated definition
+create table video_danmu
+(
+    id           int unsigned                 not null
+        primary key,
+    user_id      int unsigned                 null,
+    video_id     int unsigned                 null,
+    color        varchar(10) charset utf8mb3  null,
+    content      varchar(128) charset utf8mb3 null,
+    column_name  int                          null,
+    sum_like     int unsigned                 null,
+    is_hot       tinyint(1)                   null,
+    start_time   varchar(20) charset utf8mb3  null,
+    publish_time date                         null,
+    is_show      tinyint(1)                   null
+);
+```
+
+browse_history(浏览历史)
+
+```sql
+-- auto-generated definition
+create table browse_history
+(
+    id         int unsigned not null
+        primary key,
+    user_id    int unsigned not null,
+    video_id   int unsigned not null,
+    time       date         null,
+    is_like    tinyint(1)   null,
+    is_share   tinyint(1)   null,
+    is_collect tinyint(1)   null,
+    is_show    tinyint(1)   null
+);
+```
+
+题目练习与答题-------------------------------主要是答题后的记录：
+
+Exercises_record(答题记录)
+
+```
+id int
+user_id int
+exercises_id int
+answer String(回答，这里不管是选项还是填空都直接记录文字)
+is_correct boolean(是否正确)
+result_mark int (本题得分)
+```
+

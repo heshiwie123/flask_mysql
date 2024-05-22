@@ -2,11 +2,6 @@
 import hashlib
 import os
 
-import hashlib
-
-import hashlib
-import os
-
 
 def myBcryptEncoder(password):
     # 将字符串密码转换为字节串
@@ -44,11 +39,13 @@ def myCheckpw(password, encoderPassword):
         print("Password is incorrect")
         return False
 
+
 # 按传入对象列表大小增加占位符
 # [1,2,3]=====>[,%s ,%s,%s]主要用于in查询
 def myGetPlaceHolders(preDataList):
     placeholders = ', '.join(['%s'] * len(preDataList))
     return placeholders
+
 
 # 将传入对象进行转换，可序列
 def myToDir(dataList):
@@ -58,3 +55,9 @@ def myToDir(dataList):
         dataResultList.append(resultData)
 
     return dataResultList
+
+
+def myFolderExitsAndMkdir(fileFolder):
+    if not os.path.exists(fileFolder):
+        os.makedirs(fileFolder)
+    return True
