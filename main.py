@@ -1,7 +1,10 @@
 # flask路由，返回json相关
 from flask import request, jsonify, Flask, send_from_directory, Response
+from flask_cors import CORS
 
 app = Flask(__name__)
+origin = ['http://127.0.0.1:3000']
+CORS(app, origins=origin)  # 跨域
 
 """从自定义包装类获取数据库连接"""
 from mysql_connector.Entity.MyModel import (Student, Instructor, Admin, Enrollment, Lecture, Course, Assignment,
@@ -26,8 +29,6 @@ import os
 
 # 创建目标文件夹（如果不存在）
 
-
-# image_path = os.path.join(picture_path, str(i - 2) + ".jpg")
 # 登录
 @app.route('/login', methods=['POST'])
 def login():
@@ -270,8 +271,8 @@ def submitWork():
 
 
 # (获取作业提交后的状态)
-@app.route('/submission/getsubmitWorkByStudentId', methods=['POST'])
-def getsubmitWorkByStudentId():
+@app.route('/submission/getSubmitWorkByStudentId', methods=['POST'])
+def getSubmitWorkByStudentId():
     studentId = request.form.get('student_id')
 
     submissionList = Submission.query(db).filter("student_id = %s", studentId).all()
@@ -295,7 +296,7 @@ def getSubmissionFeedBackBySubmissionId():
     # submissionFeedBackMap = {"submissionFeedBack": submissionFeedBack}
     # 获取反馈详细信息列表
     submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
-                                                                             submissionFeedBack.id).all()
+                                                                             submissionFeedBack.id ).all()
     submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
     # submissionFeedBackDetailListMap = {"submissionFeedBackDetailList": submissionFeedBackDetailListData}
 
@@ -724,7 +725,7 @@ def addUser():
 
 
 # 编辑用户信息
-@app.route('/user/editlUser', methods=['POST'])
+@app.route('/user/editUser', methods=['POST'])
 def editlUser():
     # 信息接收
     userId = request.form.get('id')
@@ -877,7 +878,7 @@ def editCourse():
 
 
 # 删除课程信息
-@app.route('/course/ddeleteCourse', methods=['DELETE'])
+@app.route('/course/deleteCourse', methods=['DELETE'])
 def ddeleteCourse():
     # 信息接收
     courseId = request.form.get('id')
