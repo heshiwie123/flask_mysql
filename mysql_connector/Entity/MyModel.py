@@ -41,6 +41,9 @@ class SerializerMixin:
 class Student(BaseModel, SerializerMixin):
     __tablename__ = 'student'
 
+    # Student 类的构造函数
+    # 关键是对应这其父类的 Query.all() [self.model(**item) for item in result]
+    # {username: 'Alice', password: 'password123', ...}自动分配到：username, password, phone, email, major,
     def __init__(self, username, password, phone, email, major, **entries):
         super().__init__(**entries)
         self.username = username
@@ -145,7 +148,8 @@ class Submission(BaseModel, SerializerMixin):
 class SubmissionFeedBack(BaseModel, SerializerMixin):
     __tablename__ = 'submission_feedback'
 
-    def __init__(self, submission_id, title_information = "", score_total=0, score_get=0, provisional_total=0.0, **entries):
+    def __init__(self, submission_id, title_information="", score_total=0, score_get=0, provisional_total=0.0,
+                 **entries):
         super().__init__(**entries)
         self.submission_id = submission_id
         self.title_information = title_information

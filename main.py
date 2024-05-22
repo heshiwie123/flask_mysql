@@ -6,7 +6,7 @@ app = Flask(__name__)
 origin = ['http://127.0.0.1:3000']
 CORS(app, origins=origin)  # 跨域
 
-"""从自定义包装类获取数据库连接"""
+"""从自定义包装类获取数据库连接，引入的db才是对应数据库的连接"""
 from mysql_connector.Entity.MyModel import (Student, Instructor, Admin, Enrollment, Lecture, Course, Assignment,
                                             Submission, SubmissionFeedBack, SubmissionFeedBackDetail)
 from mysql_connector.mysql_config.config import db
@@ -296,7 +296,7 @@ def getSubmissionFeedBackBySubmissionId():
     # submissionFeedBackMap = {"submissionFeedBack": submissionFeedBack}
     # 获取反馈详细信息列表
     submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
-                                                                             submissionFeedBack.id ).all()
+                                                                             submissionFeedBack.id).all()
     submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
     # submissionFeedBackDetailListMap = {"submissionFeedBackDetailList": submissionFeedBackDetailListData}
 
@@ -367,15 +367,8 @@ def getStudentByInstructorId():
                        .join(Lecture, "lecture.id = enrollment.lecture_id and lecture.id = %s", lecture.id)
                        .all()
                        )
-        # studentList = (Student.query.
-        #                join(Enrollment, Enrollment.student_id == Student.id).  # 确定选课记录与学生关联
-        #                join(Lecture, Lecture.id == Enrollment.lecture_id).  # 确定选课记录与课程关联
-        #                filter(Lecture.id == lecture.id).  # 确定课程是我们找的课程
-        #                filter(Enrollment.condition != 0).all())
-
         studentListData = myToDir(studentList)
 
-        # studentListMap = {"studentListData": studentListData}
         # 每个返回map
         perMap = {"lecture_name": lecture.lecture_name, "studentListData": studentListData}
 

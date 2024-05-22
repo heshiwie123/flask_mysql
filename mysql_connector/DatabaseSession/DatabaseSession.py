@@ -25,7 +25,7 @@ class DatabaseSession:
     def execute(self, query, params=None): # sql具体执行语句
         if self.connection is None:
             self.open()
-        cursor = self.connection.cursor(dictionary=True)    #
+        cursor = self.connection.cursor(dictionary=True)
         cursor.execute(query, params or ())
         return cursor
 
