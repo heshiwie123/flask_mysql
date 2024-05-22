@@ -1,5 +1,5 @@
 # flask路由，返回json相关
-from flask import request, jsonify, Flask
+from flask import request, jsonify, Flask, send_from_directory, Response
 
 app = Flask(__name__)
 
@@ -16,7 +16,18 @@ from Enum.UserTyprEnums import UserType
 # 日期相关
 import datetime
 
+# 文件存储目录
+UPLOAD_FOLDER = 'uploadFiles'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# os操作流
+import os
+
+
+# 创建目标文件夹（如果不存在）
+
+
+# image_path = os.path.join(picture_path, str(i - 2) + ".jpg")
 # 登录
 @app.route('/login', methods=['POST'])
 def login():
@@ -284,7 +295,7 @@ def getSubmissionFeedBackBySubmissionId():
     # submissionFeedBackMap = {"submissionFeedBack": submissionFeedBack}
     # 获取反馈详细信息列表
     submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
-                                                                             submissionFeedBack.id ).all()
+                                                                             submissionFeedBack.id).all()
     submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
     # submissionFeedBackDetailListMap = {"submissionFeedBackDetailList": submissionFeedBackDetailListData}
 
@@ -1045,6 +1056,60 @@ def decideEnterEnrollment():
         'data': False,
         'msg': '检查id'
     })
+
+
+@app.route('/file/ListFiles', methods=['GET'])
+def index():
+    # 获取目录中的文件列表
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    # 将文件列表传递给模板
+    return jsonify({
+        'code': 200,
+        'data': {"fileList": files},
+        'msg': '检查id'
+    })
+
+
+@app.route('/file/upload', methods=['POST'])
+def upload_file():
+    file = request.files['file']
+    if file:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+    # 获取目录中的文件列表
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    return jsonify({
+        'code': 200,
+        'data': {
+            "res": True,
+            "fileList": files
+        },
+        'msg': '获取成功'
+    })
+
+
+@app.route('/files/<filename>')
+def download_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+
+@app.route('/display/<filename>')
+def display_file(filename):
+    try:
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        with open(file_path, 'rb') as f:
+            # 文件读取流
+            file_content = f.read()
+        if filename.endswith('.txt'):
+            return Response(file_content, mimetype='text/plain')
+        elif filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            return Response(file_content, mimetype='image/jpeg')
+        elif filename.lower().endswith('.pdf'):
+            return Response(file_content, mimetype='application/pdf')
+        else:
+            return "File format not supported for preview."
+    except IOError:
+        return "File not found."
 
 
 if __name__ == '__main__':

@@ -34,6 +34,7 @@ def display_file(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         with open(file_path, 'rb') as f:
+            # 文件读取流
             file_content = f.read()
         if filename.endswith('.txt'):
             return Response(file_content, mimetype='text/plain')
