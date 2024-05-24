@@ -1,10 +1,13 @@
 # flask路由，返回json相关
 from flask import request, jsonify, Flask, send_from_directory, Response
-from flask_cors import CORS
+
+# 关于跨域，不允许使用扩展库flask_cors 的情况下
+# 需要在每一个方法上加上：
+# response.headers.add('Access-Control-Allow-Origin', 'http://127.0.0.1:3000')
+# response.headers.add('Access-Control-Allow-Methods', 'POST, GET,PUT,DELETE, OPTIONS')
+# response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
 
 app = Flask(__name__)
-origin = ['http://127.0.0.1:3000']
-CORS(app, origins=origin)  # 跨域
 
 """从自定义包装类获取数据库连接，引入的db才是对应数据库的连接"""
 from mysql_connector.Entity.MyModel import (Student, Instructor, Admin, Enrollment, Lecture, Course, Assignment,
@@ -12,7 +15,7 @@ from mysql_connector.Entity.MyModel import (Student, Instructor, Admin, Enrollme
 from mysql_connector.mysql_config.config import db
 
 """从自定义密码加密获取:密码加密，密码校验,参数占位符获取"""
-from mysql_connector.utill.utills import myBcryptEncoder, myCheckpw, myGetPlaceHolders, myToDir
+from mysql_connector.utill.utills import myBcryptEncoder, myCheckpw, myGetPlaceHolders, myToDir, set_cors_headers
 
 """从自定义用户类型枚举导入"""
 from Enum.UserTyprEnums import UserType
@@ -28,6 +31,16 @@ import os
 
 
 # 创建目标文件夹（如果不存在）
+@app.route('/test', methods=['POST'])
+def test11():
+    response = jsonify({
+        'code': 500,
+        'data': {'res': False},
+        'msg': '登录失败,用户名或密码出错'
+    })
+    response = set_cors_headers(response=response)
+    return response
+
 
 # 登录
 @app.route('/login', methods=['POST'])
@@ -52,7 +65,7 @@ def login():
     if user:
         # 判断取出的密码是否匹配
         if myCheckpw(password, user.password):
-            return jsonify({
+            response = jsonify({
                 'code': 200,
                 'data': {
                     'identity': type,
@@ -60,12 +73,16 @@ def login():
                 },
                 'msg': '登录成功'
             })
+            response = set_cors_headers(response=response)
+            return response
 
-    return jsonify({
+    response = jsonify({
         'code': 500,
         'data': {'res': False},
         'msg': '登录失败,用户名或密码出错'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 注册
@@ -84,38 +101,44 @@ def register():
         # 表名为学生
         userTest = Student.query(db).filter("username = %s ", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
     if type == UserType.instructor.value:
         # 表名为老师
         userTest = Instructor.query(db).filter("username = %s", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
     if type == UserType.admin.value:
         # 表名为管理员
         userTest = Admin.query(db).filter("username = %s", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Admin(username=username, password=myBcryptEncoder(password), phone=phone, email=email)
 
     # 用户实体提交
     result = user.save(db)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {
             'identity': type,
@@ -123,6 +146,8 @@ def register():
         },
         'msg': '注册成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # # (获取个人注册课程列表)
@@ -157,11 +182,13 @@ def getByStudentId():
         lectureListData.append(perLectureData)
     # print(lectureListData)
     # 获取真正课程
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {'lectureListData': lectureListData},
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (获取教师发布的作业)
@@ -198,11 +225,13 @@ def getAssignmentByStudentId():
         perResult = {'lecture_name': lecture.lecture_name, 'assignmentList': assignmentResultList}
         resultList.append(perResult)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': resultList,
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (获取某个课程的教学班列表)
@@ -212,11 +241,13 @@ def getAllLectureByCourseId():
     print("getAllLectureByCourseId:" + "查询course_id:======>" + courseId)
     lectureList = Lecture.query(db).filter("course_id = %s", courseId).all()
     lectureListData = myToDir(lectureList)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': lectureListData,
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (获取所有课程的教学班列表)
@@ -241,11 +272,13 @@ def findAllLecture():
         perResult = {'course_name': course.course_name, 'lectureList': lectureListData}
         resultList.append(perResult)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': resultList,
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (提交作业)
@@ -263,11 +296,13 @@ def submitWork():
                                 submit_time=datetime.datetime.now())
     resultId = submission.save(db)
     print(resultId)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': True,
         'msg': '成功提交'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (获取作业提交后的状态)
@@ -279,11 +314,13 @@ def getSubmitWorkByStudentId():
 
     submissionListData = myToDir(submissionList)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {'submissionListData': submissionListData},
         'msg': '获取提交状态成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (获取作业反馈)
@@ -303,11 +340,13 @@ def getSubmissionFeedBackBySubmissionId():
     submissionFeedBack = submissionFeedBack.to_dict()
     resultMap = {"submissionFeedBack": submissionFeedBack,
                  "submissionFeedBackDetailList": submissionFeedBackDetailListData}
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {'SubmissionFeedBackInfo': resultMap},
         'msg': '获取提交状态成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 申请加入课程
@@ -323,11 +362,13 @@ def enterEnrollment():
 
     resulId = enrollment.save(db)
     print(resulId)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': True,
         'msg': '成功提交'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 获取所教教学班、课程列表
@@ -342,11 +383,13 @@ def getCourseAndLecture():
     # 获取课程
 
     # 获取真正课程
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {"lectureListData": lectureListData},
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 获取教学班内学生列表
@@ -375,11 +418,13 @@ def getStudentByInstructorId():
         #    添加到结果
         resultList.append(perMap)
     # 获取真正课程
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {"lectureListData": resultList},
         'msg': '成功查询'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (创建教学班)
@@ -402,17 +447,21 @@ def createLecture():
                               course_name=course.course_name)
         resultId = lecture.save(db)
         print(resultId)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': True,
             'msg': '成功创建'
         })
+        response = set_cors_headers(response=response)
+        return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': False,
             'msg': '对应的课程不存在，检查一下？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # (创建,布置作业)
@@ -434,11 +483,13 @@ def createAssignment():
                                 description=description)
     assignment.save(db)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': True,
         'msg': '成功创建'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (修改，删除作业)
@@ -475,18 +526,22 @@ def updateAssignment():
         # 提交更新到数据库
         resultId = assignment.update(db)
         print(resultId)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {'res': True},
             'msg': '成功修改'
         })
+        response = set_cors_headers(response=response)
+        return response
     else:
         print(" 跟据提供的ID查询不到数据")
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {'res': '跟据提供的ID查询不到数据,或者没有传id'},
             'msg': '跟据提供的ID查询不到数据,或者没有传id'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 访问学生的提交作业
@@ -508,11 +563,13 @@ def getsubmitWorkByInstructorId():
 
         resultList.append(perResultMap)
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {"resultList": resultList},
         'msg': '查询成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # (评分)
@@ -532,16 +589,20 @@ def updateSubmission():
         submission.update(db)
     else:
         print(" 跟据提供的ID查询不到数据")
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {'res': '跟据提供的ID查询不到数据,或者没有传id'},
             'msg': '跟据提供的ID查询不到数据,或者没有传id'
         })
-    return jsonify({
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
         'code': 200,
         'data': {'res': True},
         'msg': '成功评价'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 创建反馈信息
@@ -555,17 +616,21 @@ def addSubmissionFeedBack():
         # 构建反馈框架
         submissionFeedback = SubmissionFeedBack(submission_id=submissionId, title_information=titleInformation)
         resultId = submissionFeedback.save(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {'submission_feedback_id': resultId},
             'msg': '增加成功'
         })
+        response = set_cors_headers(response=response)
+        return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {'res': False},
             'msg': '该submission不存在，请检查？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 更新反馈信息
@@ -598,17 +663,21 @@ def updateSubmissionFeedBack():
         else:
             submissionFeedBack.provisional_total = float(scoreGet / scoreTotal)
         resultId = submissionFeedBack.update(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {'submission_feedback_id': resultId},
             'msg': '更新成功'
         })
+        response = set_cors_headers(response=response)
+        return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {'res': False},
             'msg': '该SubmissionFeedBack不存在，请检查submission_feedback_id？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 创建反馈详细信息
@@ -630,17 +699,21 @@ def addSubmissionFeedBackDetail():
                                                             score_get=scoreGet,
                                                             submission_feedback_id=submissionFeedBackId)
         resultId = submissionFeedbackDetail.save(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {'res': True},
             'msg': '增加成功'
         })
+        response = set_cors_headers(response=response)
+        return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {'res': False},
             'msg': '该submissionFeedBack不存在，请检查？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 获取用户列表
@@ -656,11 +729,13 @@ def getAllUser():
     instructorListData = myToDir(instructorList)
     instructorMap = {"instructorList": instructorListData}
     userList = (studentListMap, instructorMap)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': userList,
         'msg': '查询成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 创建用户信息
@@ -678,36 +753,42 @@ def addUser():
         # 表名为学生
         userTest = Student.query(db).filter("username = %s ", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Student(username=username, password=myBcryptEncoder(password), phone=phone, email=email, major=major)
     if type == UserType.instructor.value:
         # 表名为老师
         userTest = Instructor.query(db).filter("username = %s ", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Instructor(username=username, password=myBcryptEncoder(password), phone=phone, email=email,
                           department=department)
     if type == UserType.admin.value:
         # 表名为管理员
         userTest = Admin.query(db).filter("username = %s ", username).first()
         if userTest:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {'res': False},
                 'msg': '用户已存在，请检查类型或者名字'
             })
+            response = set_cors_headers(response=response)
+            return response
         user = Admin(username=username, password=myBcryptEncoder(password), phone=phone, email=email)
 
     resultId = user.save(db)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {
             'identity': type,
@@ -715,6 +796,8 @@ def addUser():
         },
         'msg': '创建用户成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 编辑用户信息
@@ -757,7 +840,7 @@ def editlUser():
             user.department = department
 
         resultId = user.update(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {
                 "res": True,
@@ -765,11 +848,15 @@ def editlUser():
             },
             'msg': '编辑成功'
         })
-    return jsonify({
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
         'code': 500,
         'data': {"res": "可能查找不到数据,是否传入id有误"},
         'msg': '可能查找不到数据,是否传入id有误'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 删除用户信息
@@ -788,23 +875,29 @@ def deleteUser():
     if user:
         deleteResult = user.delete(db)
         if deleteResult:
-            return jsonify({
+            response = jsonify({
                 'code': 200,
                 'data': {"res": True},
                 'msg': '删除成功'
             })
+            response = set_cors_headers(response=response)
+            return response
         else:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {"res": False},
                 'msg': '也许你无法在删除其实体关联的实体前对此实体进行删除'
             })
+            response = set_cors_headers(response=response)
+            return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {"res": False},
             'msg': '找不到数据，请检查用户id和类型？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 获取课程列表
@@ -815,11 +908,13 @@ def getAllCourse():
     courseListData = myToDir(courseList)
     courseListMap = {"courseList": courseListData}
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': courseListMap,
         'msg': '查询成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 创建课程信息
@@ -829,13 +924,15 @@ def addCourse():
     description = request.form.get('description')
     course = Course(course_name=courseName, description=description)
     resultId = course.save(db)
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {'res': True,
                  "resultId": resultId
                  },
         'msg': '添加成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 编辑课程信息
@@ -855,7 +952,7 @@ def editCourse():
             course.description = description
 
         resultId = course.update(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {
                 "res": True,
@@ -863,11 +960,15 @@ def editCourse():
             },
             'msg': '编辑成功'
         })
-    return jsonify({
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
         'code': 500,
         'data': {"res": "可能查找不到数据,是否传入id有误"},
         'msg': '可能查找不到数据,是否传入id有误'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 删除课程信息
@@ -882,23 +983,29 @@ def ddeleteCourse():
         # 修改信息
         deleteResult = course.delete(db)
         if deleteResult:
-            return jsonify({
+            response = jsonify({
                 'code': 200,
                 'data': {"res": True},
                 'msg': '删除成功'
             })
+            response = set_cors_headers(response=response)
+            return response
         else:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {"res": False},
                 'msg': '也许你无法在删除其实体关联的实体前对此实体进行删除'
             })
+            response = set_cors_headers(response=response)
+            return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {"res": False},
             'msg': '查询不到数据，检查一下？'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 获取教学课程列表
@@ -909,11 +1016,13 @@ def getAllLecture():
     lectureListData = myToDir(lectureList)
     lectureListMap = {"lectureList": lectureListData}
 
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': lectureListMap,
         'msg': '查询成功'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 编辑教学课程信息
@@ -944,19 +1053,23 @@ def editLecture():
             lecture.is_delete = isDelete
 
         resultId = lecture.update(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {"res": True,
                      "resultId": resultId
                      },
             'msg': '编辑成功'
         })
+        response = set_cors_headers(response=response)
+        return response
 
-    return jsonify({
+    response = jsonify({
         'code': 500,
         'data': {"res": "可能查找不到数据,是否传入id有误"},
         'msg': '可能查找不到数据,是否传入id有误'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 删除教学课程信息
@@ -972,23 +1085,29 @@ def deleteLecture():
 
         deleteResult = lecture.delete(db)
         if deleteResult:
-            return jsonify({
+            response = jsonify({
                 'code': 200,
                 'data': {"res": True},
                 'msg': '删除成功'
             })
+            response = set_cors_headers(response=response)
+            return response
         else:
-            return jsonify({
+            response = jsonify({
                 'code': 500,
                 'data': {"res": False},
                 'msg': '也许你无法在删除其实体关联的实体前对此实体进行删除'
             })
+            response = set_cors_headers(response=response)
+            return response
     else:
-        return jsonify({
+        response = jsonify({
             'code': 500,
             'data': {"res": "可能查找不到数据,是否传入id有误"},
             'msg': '可能查找不到数据,是否传入id有误'
         })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # 为一名教师创建课程
@@ -1011,16 +1130,20 @@ def addLecture():
                               time=datetime.datetime.now(),
                               lecture_name=lectureName)
         lecture.save(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': {"res": True},
             'msg': '添加成功'
         })
-    return jsonify({
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
         'code': 500,
         'data': {"res": False},
         'msg': '检查一下'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 # 决定是否允许学生注册课程
@@ -1040,51 +1163,71 @@ def decideEnterEnrollment():
             enrollment.status = condition
         print(enrollment)
         enrollment.update(db)
-        return jsonify({
+        response = jsonify({
             'code': 200,
             'data': True,
             'msg': '成功提交'
         })
-    return jsonify({
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
         'code': 500,
         'data': False,
         'msg': '检查id'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 @app.route('/file/ListFiles', methods=['GET'])
-def index():
+def listFiles():
     # 获取目录中的文件列表
     files = os.listdir(app.config['UPLOAD_FOLDER'])
     # 将文件列表传递给模板
-    return jsonify({
+    response = jsonify({
         'code': 200,
         'data': {"fileList": files},
         'msg': '检查id'
     })
+    response = set_cors_headers(response=response)
+    return response
 
 
 @app.route('/file/upload', methods=['POST'])
 def upload_file():
-    file = request.files['file']
-    if file:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(file_path)
-    # 获取目录中的文件列表
-    files = os.listdir(app.config['UPLOAD_FOLDER'])
-    return jsonify({
-        'code': 200,
-        'data': {
-            "res": True,
-            "fileList": files
-        },
-        'msg': '获取成功'
-    })
+    try:
+        file = request.files['file']
+        if file:
+            print("接收文件+"+file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+            file.save(file_path)
+            files = os.listdir(app.config['UPLOAD_FOLDER'])
+            response = jsonify({
+                'code': 200,
+                'data': {
+                    "res": True,
+                    "fileList": files
+                },
+                'msg': '上传成功'
+            })
+            set_cors_headers(response=response)
+            return response
+        else:
+            raise Exception("No file part")
+    except Exception as e:
+        response = jsonify({
+            'code': 500,
+            'data': {},
+            'msg': f'上传失败: {str(e)}'
+        })
+        set_cors_headers(response=response)
+        return response
 
 
 @app.route('/files/<filename>')
 def download_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    response = send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+    return set_cors_headers(response)
 
 
 @app.route('/display/<filename>')
@@ -1092,16 +1235,18 @@ def display_file(filename):
     try:
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         with open(file_path, 'rb') as f:
-            # 文件读取流
             file_content = f.read()
+        response = None
         if filename.endswith('.txt'):
-            return Response(file_content, mimetype='text/plain')
+            response = Response(file_content, mimetype='text/plain')
         elif filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-            return Response(file_content, mimetype='image/jpeg')
+            response = Response(file_content, mimetype='image/jpeg')
         elif filename.lower().endswith('.pdf'):
-            return Response(file_content, mimetype='application/pdf')
+            response = Response(file_content, mimetype='application/pdf')
         else:
             return "File format not supported for preview."
+
+        return set_cors_headers(response)
     except IOError:
         return "File not found."
 
