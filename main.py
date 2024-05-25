@@ -41,7 +41,7 @@ def handle_options_request():
         return response
 
 
-# 创建目标文件夹（如果不存在）
+
 @app.route('/test', methods=['PUT'])
 def test11():
     response = jsonify({
@@ -184,25 +184,34 @@ def getByStudentId():
 
         # 获取教学课程
         lectureList = Lecture.query(db).filter(query_string, *enrollmentLectureIdList).all()
-
-        lectureListData = []
-        # 获取教师信息
-        for lecture in lectureList:
-            instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
-            # 构造lectureData
-            lecture = lecture.to_dict()
-            perLectureData = {"instructorName": instructor.username, "lectureData": lecture}
-            # 包装
-            lectureListData.append(perLectureData)
-        # print(lectureListData)
-        # 获取真正课程
-        response = jsonify({
-            'code': 200,
-            'data': {'lectureListData': lectureListData},
-            'msg': '成功查询'
-        })
-        response = set_cors_headers(response=response)
-        return response
+        if lectureList:
+            lectureListData = []
+            # 获取教师信息
+            for lecture in lectureList:
+                instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
+                if instructor:
+                    # 构造lectureData
+                    lecture = lecture.to_dict()
+                    perLectureData = {"instructorName": instructor.username, "lectureData": lecture}
+                    # 包装
+                    lectureListData.append(perLectureData)
+            # print(lectureListData)
+            # 获取真正课程
+            response = jsonify({
+                'code': 200,
+                'data': {'lectureListData': lectureListData},
+                'msg': '成功查询'
+            })
+            response = set_cors_headers(response=response)
+            return response
+        else:
+            response = jsonify({
+                'code': 500,
+                'data': {'lectureListData': ''},
+                'msg': '没有数据'
+            })
+            response = set_cors_headers(response=response)
+            return response
     else:
         response = jsonify({
             'code': 500,
@@ -220,40 +229,55 @@ def getAssignmentByStudentId():
     print("getAssignmentByStudentId:" + "查询studentId:======>" + studentId)
     # 注册课程列表
     enrollmentList = Enrollment.query(db).filter("student_id = %s", studentId).all()
+    if enrollmentList:
+        # 构建id列表
+        enrollmentLectureIdList = []
+        for enrollment in enrollmentList:
+            enrollmentLectureIdList.append(enrollment.lecture_id)
 
-    # 构建id列表
-    enrollmentLectureIdList = []
-    for enrollment in enrollmentList:
-        enrollmentLectureIdList.append(enrollment.lecture_id)
+        # 生成SQL查询中的占位符字符串
+        placeholders = myGetPlaceHolders(enrollmentLectureIdList)
 
-    # 生成SQL查询中的占位符字符串
-    placeholders = myGetPlaceHolders(enrollmentLectureIdList)
+        # 构建查询
+        query_string = f"id IN ({placeholders})"
 
-    # 构建查询
-    query_string = f"id IN ({placeholders})"
+        # 获取教学课程
+        lectureList = Lecture.query(db).filter(query_string, *enrollmentLectureIdList).all()
+        if lectureList:
+            resultList = []
+            for lecture in lectureList:
+                assignmentList = Assignment.query(db).filter("is_delete = 0").filter("lecture_id = %s",
+                                                                                     lecture.id).all()
+                # 序列化每一个类
+                assignmentResultList = myToDir(assignmentList)
 
-    # 获取教学课程
-    lectureList = Lecture.query(db).filter(query_string, *enrollmentLectureIdList).all()
+                # 作业map, # 教学课程map
+                perResult = {'lecture_name': lecture.lecture_name, 'assignmentList': assignmentResultList}
+                resultList.append(perResult)
 
-    lectureIdList = [lecture.id for lecture in lectureList]
-
-    resultList = []
-    for lecture in lectureList:
-        assignmentList = Assignment.query(db).filter("is_delete = 0").filter("lecture_id = %s", lecture.id).all()
-        # 序列化每一个类
-        assignmentResultList = myToDir(assignmentList)
-
-        # 作业map, # 教学课程map
-        perResult = {'lecture_name': lecture.lecture_name, 'assignmentList': assignmentResultList}
-        resultList.append(perResult)
-
-    response = jsonify({
-        'code': 200,
-        'data': resultList,
-        'msg': '成功查询'
-    })
-    response = set_cors_headers(response=response)
-    return response
+            response = jsonify({
+                'code': 200,
+                'data': resultList,
+                'msg': '成功查询'
+            })
+            response = set_cors_headers(response=response)
+            return response
+        else:
+            response = jsonify({
+                'code': 500,
+                'data': '',
+                'msg': '无数据'
+            })
+            response = set_cors_headers(response=response)
+            return response
+    else:
+        response = jsonify({
+            'code': 500,
+            'data': '',
+            'msg': '无数据'
+        })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # (获取某个课程的教学班列表)
@@ -262,11 +286,19 @@ def getAllLectureByCourseId():
     courseId = request.form.get('course_id')
     print("getAllLectureByCourseId:" + "查询course_id:======>" + courseId)
     lectureList = Lecture.query(db).filter("course_id = %s", courseId).all()
-    lectureListData = myToDir(lectureList)
+    if lectureList:
+        lectureListData = myToDir(lectureList)
+        response = jsonify({
+            'code': 200,
+            'data': lectureListData,
+            'msg': '成功查询'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': lectureListData,
-        'msg': '成功查询'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -277,27 +309,35 @@ def getAllLectureByCourseId():
 def findAllLecture():
     # 所有课程列表
     courseList = Course.query(db).all()
+    if courseList:
+        # 定义返回结果
+        resultList = []
+        # 根据课程id批量查询教学课程
+        for course in courseList:
+            # 课程map
+            # courseMap = {'course_name': course.course_name}
+            courseId = course.id
+            # 查询教学课程
+            lectureList = Lecture.query(db).filter("course_id = %s", courseId).filter(" is_delete = 0").all()
+            if lectureList:
+                # 序列化每一个类
+                lectureListData = myToDir(lectureList)
+                # 教学课程map
+                # lectureMap = {'lectureList': lectureListData}
+                perResult = {'course_name': course.course_name, 'lectureList': lectureListData}
+                resultList.append(perResult)
 
-    # 定义返回结果
-    resultList = []
-    # 根据课程id批量查询教学课程
-    for course in courseList:
-        # 课程map
-        # courseMap = {'course_name': course.course_name}
-        courseId = course.id
-        # 查询教学课程
-        lectureList = Lecture.query(db).filter("course_id = %s", courseId).filter(" is_delete = 0").all()
-        # 序列化每一个类
-        lectureListData = myToDir(lectureList)
-        # 教学课程map
-        # lectureMap = {'lectureList': lectureListData}
-        perResult = {'course_name': course.course_name, 'lectureList': lectureListData}
-        resultList.append(perResult)
-
+        response = jsonify({
+            'code': 200,
+            'data': resultList,
+            'msg': '成功查询'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': resultList,
-        'msg': '成功查询'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -333,13 +373,20 @@ def getSubmitWorkByStudentId():
     studentId = request.form.get('student_id')
 
     submissionList = Submission.query(db).filter("student_id = %s", studentId).all()
+    if submissionList:
+        submissionListData = myToDir(submissionList)
 
-    submissionListData = myToDir(submissionList)
-
+        response = jsonify({
+            'code': 200,
+            'data': {'submissionListData': submissionListData},
+            'msg': '获取提交状态成功'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': {'submissionListData': submissionListData},
-        'msg': '获取提交状态成功'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -352,20 +399,27 @@ def getSubmissionFeedBackBySubmissionId():
 
     # 获取反馈信息
     submissionFeedBack = SubmissionFeedBack.query(db).filter("submission_id = %s ", submissionId).first()
-    # submissionFeedBackMap = {"submissionFeedBack": submissionFeedBack}
-    # 获取反馈详细信息列表
-    submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
-                                                                             submissionFeedBack.id).all()
-    submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
-    # submissionFeedBackDetailListMap = {"submissionFeedBackDetailList": submissionFeedBackDetailListData}
+    if submissionFeedBack:
+        # 获取反馈详细信息列表
+        submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter("submission_feedback_id = %s ",
+                                                                                 submissionFeedBack.id).all()
+        if submissionFeedBackDetailList:
+            submissionFeedBackDetailListData = myToDir(submissionFeedBackDetailList)
 
-    submissionFeedBack = submissionFeedBack.to_dict()
-    resultMap = {"submissionFeedBack": submissionFeedBack,
-                 "submissionFeedBackDetailList": submissionFeedBackDetailListData}
+            submissionFeedBack = submissionFeedBack.to_dict()
+            resultMap = {"submissionFeedBack": submissionFeedBack,
+                         "submissionFeedBackDetailList": submissionFeedBackDetailListData}
+            response = jsonify({
+                'code': 200,
+                'data': {'SubmissionFeedBackInfo': resultMap},
+                'msg': '获取提交状态成功'
+            })
+            response = set_cors_headers(response=response)
+            return response
     response = jsonify({
-        'code': 200,
-        'data': {'SubmissionFeedBackInfo': resultMap},
-        'msg': '获取提交状态成功'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -443,14 +497,22 @@ def getCourseAndLecture():
 
     # 获取个人所教的教学课程
     lectureList = Lecture.query(db).filter("instructor_id = %s", instructorId).all()
-    lectureListData = myToDir(lectureList)
-    # 获取课程
+    if lectureList:
+        lectureListData = myToDir(lectureList)
+        # 获取课程
 
-    # 获取真正课程
+        # 获取真正课程
+        response = jsonify({
+            'code': 200,
+            'data': {"lectureListData": lectureListData},
+            'msg': '成功查询'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': {"lectureListData": lectureListData},
-        'msg': '成功查询'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -464,28 +526,35 @@ def getStudentByInstructorId():
 
     # 获取个人所教的教学课程
     lectureList = Lecture.query(db).filter("instructor_id = %s", instructorId).all()
+    if lectureList:
+        resultList = []
+        for lecture in lectureList:
+            # 获取教学班得学生列表
+            studentList = (Student.query(db)
+                           .join(Enrollment, "enrollment.student_id = student.id and enrollment.status != 0")
+                           .join(Lecture, "lecture.id = enrollment.lecture_id and lecture.id = %s", lecture.id)
+                           .all()
+                           )
+            if studentList:
+                studentListData = myToDir(studentList)
 
-    resultList = []
-    for lecture in lectureList:
-        # lectureNameMap = {"lecture_name": lecture.lecture_name}
-        # 获取教学班得学生列表
-        studentList = (Student.query(db)
-                       .join(Enrollment, "enrollment.student_id = student.id and enrollment.status != 0")
-                       .join(Lecture, "lecture.id = enrollment.lecture_id and lecture.id = %s", lecture.id)
-                       .all()
-                       )
-        studentListData = myToDir(studentList)
+                # 每个返回map
+                perMap = {"lecture_name": lecture.lecture_name, "studentListData": studentListData}
 
-        # 每个返回map
-        perMap = {"lecture_name": lecture.lecture_name, "studentListData": studentListData}
-
-        #    添加到结果
-        resultList.append(perMap)
-    # 获取真正课程
+                #    添加到结果
+                resultList.append(perMap)
+        # 获取真正课程
+        response = jsonify({
+            'code': 200,
+            'data': {"lectureListData": resultList},
+            'msg': '成功查询'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': {"lectureListData": resultList},
-        'msg': '成功查询'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -615,23 +684,31 @@ def getsubmitWorkByInstructorId():
     instructorId = request.form.get('instructor_id')
 
     lectureList = Lecture.query(db).filter("instructor_id = %s ", instructorId).all()
-    # 返回结果
-    resultList = []
+    if lectureList:
+        # 返回结果
+        resultList = []
 
-    for lecture in lectureList:
-        # 查找每一个教学班对应的作业
-        # print(lecture.id)
-        submissionList = Submission.query(db).filter("lecture_id = %s ", lecture.id).all()
-        # 手动序列化,避免无法进行json转换
-        submissionListData = myToDir(submissionList)
-        perResultMap = {'lecture_name': lecture.lecture_name, "submissionListData": submissionListData}
+        for lecture in lectureList:
+            # 查找每一个教学班对应的作业
+            # print(lecture.id)
+            submissionList = Submission.query(db).filter("lecture_id = %s ", lecture.id).all()
+            # 手动序列化,避免无法进行json转换
+            submissionListData = myToDir(submissionList)
+            perResultMap = {'lecture_name': lecture.lecture_name, "submissionListData": submissionListData}
 
-        resultList.append(perResultMap)
+            resultList.append(perResultMap)
 
+        response = jsonify({
+            'code': 200,
+            'data': {"resultList": resultList},
+            'msg': '查询成功'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': {"resultList": resultList},
-        'msg': '查询成功'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -970,13 +1047,21 @@ def deleteUser():
 def getAllCourse():
     # 查询所有课程
     courseList = Course.query(db).all()
-    courseListData = myToDir(courseList)
-    courseListMap = {"courseList": courseListData}
+    if courseList:
+        courseListData = myToDir(courseList)
+        courseListMap = {"courseList": courseListData}
 
+        response = jsonify({
+            'code': 200,
+            'data': courseListMap,
+            'msg': '查询成功'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': courseListMap,
-        'msg': '查询成功'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
@@ -1078,13 +1163,21 @@ def ddeleteCourse():
 def getAllLecture():
     # 查询所有教学课程
     lectureList = Lecture.query(db).all()
-    lectureListData = myToDir(lectureList)
-    lectureListMap = {"lectureList": lectureListData}
+    if lectureList:
+        lectureListData = myToDir(lectureList)
+        lectureListMap = {"lectureList": lectureListData}
 
+        response = jsonify({
+            'code': 200,
+            'data': lectureListMap,
+            'msg': '查询成功'
+        })
+        response = set_cors_headers(response=response)
+        return response
     response = jsonify({
-        'code': 200,
-        'data': lectureListMap,
-        'msg': '查询成功'
+        'code': 500,
+        'data': '',
+        'msg': '无数据'
     })
     response = set_cors_headers(response=response)
     return response
