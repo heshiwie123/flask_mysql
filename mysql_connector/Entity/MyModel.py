@@ -93,12 +93,14 @@ class Lecture(BaseModel, SerializerMixin):
     __tablename__ = 'lecture'
 
     def __init__(self, lecture_name, course_name, instructor_id, course_id, time=datetime.datetime.now(), status=0,
+                 academic_year="未安排",
                  is_delete=False, **entries):
         super().__init__(**entries)
         self.time = time
         self.lecture_name = lecture_name
         self.course_name = course_name
         self.instructor_id = instructor_id
+        self.academic_year = academic_year
         self.course_id = course_id
         self.status = status
         self.is_delete = is_delete
