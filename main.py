@@ -1,5 +1,5 @@
 # flask路由，返回json相关
-from flask import request, jsonify, Flask, send_from_directory, Response
+from flask import request, jsonify, Flask, send_from_directory, Response, make_response
 
 # 关于跨域，不允许使用扩展库flask_cors 的情况下
 # 需要在每一个方法上加上：
@@ -30,8 +30,19 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 import os
 
 
+# 处理预检请求
+@app.before_request
+def handle_options_request():
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response
+
+
 # 创建目标文件夹（如果不存在）
-@app.route('/test', methods=['POST'])
+@app.route('/test', methods=['PUT'])
 def test11():
     response = jsonify({
         'code': 500,

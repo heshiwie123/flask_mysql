@@ -2,6 +2,8 @@
 import hashlib
 import os
 
+from flask import Response, make_response, request
+
 
 def myBcryptEncoder(password):
     # 将字符串密码转换为字节串
@@ -68,11 +70,12 @@ def myFolderExitsAndMkdir(fileFolder):
 def set_cors_headers(response, origin='*'):
     """
     Sets CORS headers for a response object and returns the modified response.
-    :param response: Flask response object
+    :param response: Response object
     :param origin: A string that specifies the origin which should be allowed to access the resource.
-    :return: Modified Flask response object with CORS headers
+    :return: Modified response object with CORS headers
     """
     response.headers['Access-Control-Allow-Origin'] = origin
     response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'  # 如果需要处理 cookies
     return response
