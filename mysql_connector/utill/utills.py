@@ -61,3 +61,18 @@ def myFolderExitsAndMkdir(fileFolder):
     if not os.path.exists(fileFolder):
         os.makedirs(fileFolder)
     return True
+
+
+# origin='http://127.0.0.1:3000'
+# origin='http://localhost:3000'
+def set_cors_headers(response, origin='*'):
+    """
+    Sets CORS headers for a response object and returns the modified response.
+    :param response: Flask response object
+    :param origin: A string that specifies the origin which should be allowed to access the resource.
+    :return: Modified Flask response object with CORS headers
+    """
+    response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Methods'] = 'POST, GET, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
