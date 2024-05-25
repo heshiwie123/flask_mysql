@@ -165,41 +165,52 @@ def register():
 @app.route('/course/getCourseByStudentId', methods=['POST'])
 def getByStudentId():
     studentId = request.form.get('student_id')
+
     print("getByStudentId:" + "查询studentId:======>" + studentId)
     # 获取个人选择的教学课程
+    # studentId = int(studentId)
     enrollmentList = Enrollment.query(db).filter(" student_id = %s and status != 0", studentId).all()
     # 获取id列表
-    enrollmentLectureIdList = []
-    for enrollment in enrollmentList:
-        enrollmentLectureIdList.append(enrollment.lecture_id)
+    if enrollmentList:
+        enrollmentLectureIdList = []
+        for enrollment in enrollmentList:
+            enrollmentLectureIdList.append(enrollment.lecture_id)
 
-    # 生成SQL查询中的占位符字符串
-    placeholders = myGetPlaceHolders(enrollmentLectureIdList)
+        # 生成SQL查询中的占位符字符串
+        placeholders = myGetPlaceHolders(enrollmentLectureIdList)
 
-    # 构建查询
-    query_string = f"id IN ({placeholders})"
+        # 构建查询
+        query_string = f"id IN ({placeholders})"
 
-    # 获取教学课程
-    lectureList = Lecture.query(db).filter(query_string, *enrollmentLectureIdList).all()
+        # 获取教学课程
+        lectureList = Lecture.query(db).filter(query_string, *enrollmentLectureIdList).all()
 
-    lectureListData = []
-    # 获取教师信息
-    for lecture in lectureList:
-        instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
-        # 构造lectureData
-        lecture = lecture.to_dict()
-        perLectureData = {"instructorName": instructor.username, "lectureData": lecture}
-        # 包装
-        lectureListData.append(perLectureData)
-    # print(lectureListData)
-    # 获取真正课程
-    response = jsonify({
-        'code': 200,
-        'data': {'lectureListData': lectureListData},
-        'msg': '成功查询'
-    })
-    response = set_cors_headers(response=response)
-    return response
+        lectureListData = []
+        # 获取教师信息
+        for lecture in lectureList:
+            instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
+            # 构造lectureData
+            lecture = lecture.to_dict()
+            perLectureData = {"instructorName": instructor.username, "lectureData": lecture}
+            # 包装
+            lectureListData.append(perLectureData)
+        # print(lectureListData)
+        # 获取真正课程
+        response = jsonify({
+            'code': 200,
+            'data': {'lectureListData': lectureListData},
+            'msg': '成功查询'
+        })
+        response = set_cors_headers(response=response)
+        return response
+    else:
+        response = jsonify({
+            'code': 500,
+            'data': {'lectureListData': ''},
+            'msg': '没有数据'
+        })
+        response = set_cors_headers(response=response)
+        return response
 
 
 # (获取教师发布的作业)
