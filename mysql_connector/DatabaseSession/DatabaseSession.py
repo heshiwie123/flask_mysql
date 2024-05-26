@@ -1,33 +1,51 @@
 import mysql.connector
+import logging
+from contextlib import contextmanager
 
-
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 # 自定义数据库连接操作
 # 用于管理连接connection 和 close
-class DatabaseSession:
+from mysql.connector import pooling
 
-    def __init__(self, config):  # 构造方法，传入config连接配置
-        self.config = config
+
+class DatabaseSession:
+    def __init__(self, config):
+        self.pool = pooling.MySQLConnectionPool(pool_name="mypool",
+                                                pool_size=10,
+                                                **config)
         self.connection = None
 
     def open(self):
-        self.connection = mysql.connector.connect(**self.config)  # **self.config,自动解包config,否则需要手动取出每一个配置进行设置
-        # connection = mysql.connector.connect(
-        #     host=self.config['host'],
-        #     user=self.config['user'],
-        #     password=self.config['password'],
-        #     database=self.config['database']
-        # )
+        self.connection = self.pool.get_connection()
 
     def close(self):
         if self.connection:
-            self.connection.close()  # 关闭数据库连接，避免浪费资源
+            self.connection.close()
+            self.connection = None
 
-    def execute(self, query, params=None): # sql具体执行语句
-        if self.connection is None:
-            self.open()
-        cursor = self.connection.cursor(dictionary=True)
-        cursor.execute(query, params or ())
-        return cursor
+    # @contextmanager
+    # def cursor(self):
+    #     cursor = None
+    #     try:
+    #         cursor = self.execute("SELECT 1")  # 这里只是为了示例
+    #         yield cursor
+    #     finally:
+    #         if cursor:
+    #             cursor.close()
+
+    def execute(self, query, params=None):
+        try:
+            if self.connection is None:
+                self.open()
+            cursor = self.connection.cursor(buffered=True, dictionary=True)
+            cursor.execute(query, params or ())
+            return cursor
+        except Exception as e:
+            logger.error("Database execution failed: %s", e)
+            if self.connection:
+                self.connection.rollback()
+            raise
 
     def commit(self):
         if self.connection:
