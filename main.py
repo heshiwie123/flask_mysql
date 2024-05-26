@@ -41,7 +41,6 @@ def handle_options_request():
         return response
 
 
-
 @app.route('/test', methods=['PUT'])
 def test11():
     response = jsonify({
@@ -189,6 +188,7 @@ def getByStudentId():
             # 获取教师信息
             for lecture in lectureList:
                 instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
+                instructorName = ''
                 if instructor:
                     # 构造lectureData
                     lecture = lecture.to_dict()
@@ -286,11 +286,24 @@ def getAllLectureByCourseId():
     courseId = request.form.get('course_id')
     print("getAllLectureByCourseId:" + "查询course_id:======>" + courseId)
     lectureList = Lecture.query(db).filter("course_id = %s", courseId).all()
+    # 构建返回结果
+    resultListData = []
     if lectureList:
-        lectureListData = myToDir(lectureList)
+        for lecture in lectureList:
+            # 获取对应教师信息
+            instructorName = ''
+            instructor = Instructor.query(db).filter("id = %s ", lecture.instructor_id).first()
+            if instructor:
+                # 教师名字
+                instructorName = instructor.username
+            #     序列化
+            lecture = lecture.to_dict()
+
+            perResultLecture = {"instructorName": instructorName, "lecture": lecture}
+            resultListData.append(perResultLecture)
         response = jsonify({
             'code': 200,
-            'data': lectureListData,
+            'data': resultListData,
             'msg': '成功查询'
         })
         response = set_cors_headers(response=response)
