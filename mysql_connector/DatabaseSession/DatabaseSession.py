@@ -11,13 +11,14 @@ logging.basicConfig(level=logging.INFO)
 class DatabaseSession:
 
     def __init__(self, config):  # 构造方法，传入config连接配置
+        # pool_size：0~32
         self.pool = pooling.MySQLConnectionPool(pool_name="mypool",
-                                                pool_size=30,
+                                                pool_size=20,
                                                 **config)  # **self.config,自动解包config,否则需要手动取出每一个配置进行设置
         # connection = mysql.connector.connect(
         #     host=self.config['host'],
         #     user=self.config['user'],
-        #     password=self.config['password'],
+        #     password=self.config['password'
         #     database=self.config['database']
         # )
         self.connection = None

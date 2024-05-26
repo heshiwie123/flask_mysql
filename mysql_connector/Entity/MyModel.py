@@ -136,7 +136,8 @@ class Assignment(BaseModel, SerializerMixin):
 class Submission(BaseModel, SerializerMixin):
     __tablename__ = 'submission'
 
-    def __init__(self, title, submit_time, lecture_id, student_id, description="", is_delete=False, **entries):
+    def __init__(self, title, submit_time, lecture_id, student_id, file_path, description="", is_delete=False,
+                 **entries):
         super().__init__(**entries)
         self.title = title
         self.submit_time = submit_time
@@ -144,6 +145,7 @@ class Submission(BaseModel, SerializerMixin):
         self.student_id = student_id
         self.description = description
         self.is_delete = is_delete
+        self.file_path = file_path
 
 
 # 作业反馈实体
