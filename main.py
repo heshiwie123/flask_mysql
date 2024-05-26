@@ -328,17 +328,18 @@ def findAllLecture():
         # 根据课程id批量查询教学课程
         for course in courseList:
             # 课程map
-            # courseMap = {'course_name': course.course_name}
             courseId = course.id
             # 查询教学课程
             lectureList = Lecture.query(db).filter("course_id = %s", courseId).filter(" is_delete = 0").all()
             if lectureList:
-                # 序列化每一个类
-                lectureListData = myToDir(lectureList)
-                # 教学课程map
-                # lectureMap = {'lectureList': lectureListData}
-                perResult = {'course_name': course.course_name, 'lectureList': lectureListData}
-                resultList.append(perResult)
+                # 查询对应的教师
+                for lecture in lectureList:
+                    instructor = Instructor.query(db).filter(" id = %s", lecture.instructor_id).first()
+                    # 序列化
+                    lecture = lecture.to_dict()
+                    perResult = {'course_name': course.course_name, "instructorName": instructor.username,
+                                 "lecture": lecture}
+                    resultList.append(perResult)
 
         response = jsonify({
             'code': 200,
