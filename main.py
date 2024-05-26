@@ -1176,13 +1176,23 @@ def ddeleteCourse():
 def getAllLecture():
     # 查询所有教学课程
     lectureList = Lecture.query(db).all()
+    resultList = []
     if lectureList:
-        lectureListData = myToDir(lectureList)
-        lectureListMap = {"lectureList": lectureListData}
+        for lecture in lectureList:
+
+            #  教师名字
+            instructorName = ''
+            instructor = Instructor.query(db).filter("id = %s", lecture.instructor_id).first()
+            if instructor:
+                instructorName = instructor.username
+            # 序列化
+            lecture = lecture.to_dict()
+            perResultList = {"instructorName": instructorName, "lecture": lecture}
+            resultList.append(perResultList)
 
         response = jsonify({
             'code': 200,
-            'data': lectureListMap,
+            'data': resultList,
             'msg': '查询成功'
         })
         response = set_cors_headers(response=response)
