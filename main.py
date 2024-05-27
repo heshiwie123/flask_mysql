@@ -890,6 +890,54 @@ def addSubmissionFeedBackDetail():
         return response
 
 
+# 更新用户反馈详细信息
+@app.route('/submission/updateSubmissionFeedBackDetail', methods=['POST'])
+def updateSubmissionFeedBackDetail():
+    feedbackDetailId = request.form.get('submission_feedback_detail_id')
+    criteria = request.form.get('criteria')
+    comment = request.form.get('comment')
+
+    scoreSum = request.form.get('score_sum')
+    # 这两个需要转换为int型需要先检测
+    if scoreSum and scoreSum != '' and scoreSum != ' ':
+        scoreSum = int(scoreSum)
+    scoreGet = request.form.get('score_get')
+    if scoreGet and scoreSum != '' and scoreSum != ' ':
+        scoreGet = int(scoreGet)
+
+    submissionFeedBackDetail = SubmissionFeedBackDetail.query(db).filter(" id  = %s ", feedbackDetailId).first()
+    if submissionFeedBackDetail:
+        if criteria and criteria != '' and criteria != ' ':
+            submissionFeedBackDetail.criteria = criteria
+        if comment and comment != '' and comment != ' ':
+            submissionFeedBackDetail.comment = comment
+        if scoreSum and scoreSum != '' and scoreSum != ' ':
+            submissionFeedBackDetail.score_sum = scoreSum
+        if scoreGet and scoreGet != '' and scoreGet != ' ':
+            submissionFeedBackDetail.score_get = scoreGet
+        resultId = submissionFeedBackDetail.update(db)
+        response = jsonify({
+            'code': 200,
+            'data': {
+                'res': True,
+                "submission_feedback_detail_id": resultId
+            },
+            'msg': '修改成功！！！'
+        })
+        response = set_cors_headers(response=response)
+        return response
+    response = jsonify({
+        'code': 500,
+        'data': {
+            'res': False,
+            "submission_feedback_detail_id": feedbackDetailId
+        },
+        'msg': '查寻不到数据，请检查输入'
+    })
+    response = set_cors_headers(response=response)
+    return response
+
+
 # 获取用户列表
 @app.route('/user/getAllUser', methods=['GET'])
 def getAllUser():
@@ -1380,6 +1428,7 @@ def decideEnterEnrollment():
     return response
 
 
+# 获取上传的文件列表
 @app.route('/file/ListFiles', methods=['GET'])
 def listFiles():
     # 获取目录中的文件列表
@@ -1394,6 +1443,7 @@ def listFiles():
     return response
 
 
+# 上传文件，返回文件相对路径
 @app.route('/file/upload', methods=['POST'])
 def upload_file():
     try:
@@ -1428,12 +1478,14 @@ def upload_file():
         return response
 
 
+# 下载文件
 @app.route('/files/<filename>')
 def download_file(filename):
     response = send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     return set_cors_headers(response)
 
 
+#  预览文件
 @app.route('/display/<filename>')
 def display_file(filename):
     try:
