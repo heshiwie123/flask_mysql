@@ -938,6 +938,41 @@ def updateSubmissionFeedBackDetail():
     return response
 
 
+# 删除反馈详细信息
+@app.route('/submission/deleteSubmissionFeedBackDetail', methods=['DELETE'])
+def deleteSubmissionFeedBackDetail():
+    submissionFeedBackDetailId = request.form.get('submission_feedback_detail_id')
+
+    # 查询特定的 SubmissionFeedBack
+    submissionFeedbackDetail = SubmissionFeedBackDetail.query(db).filter("id = %s", submissionFeedBackDetailId).first()
+    if submissionFeedbackDetail:
+        # 构建反馈框架
+        result = submissionFeedbackDetail.delete(db)
+        if result:
+            response = jsonify({
+                'code': 200,
+                'data': {'res': result},
+                'msg': '删除成功！！！！'
+            })
+            response = set_cors_headers(response=response)
+            return response
+        response = jsonify({
+            'code': 500,
+            'data': {'res': result},
+            'msg': '删除失败！！！！'
+        })
+        response = set_cors_headers(response=response)
+        return response
+    else:
+        response = jsonify({
+            'code': 500,
+            'data': {'res': False},
+            'msg': '该submissionFeedBack不存在，请检查？'
+        })
+        response = set_cors_headers(response=response)
+        return response
+
+
 # 获取用户列表
 @app.route('/user/getAllUser', methods=['GET'])
 def getAllUser():
