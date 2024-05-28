@@ -873,6 +873,12 @@ def addSubmissionFeedBackDetail():
                                                             score_get=scoreGet,
                                                             submission_feedback_id=submissionFeedBackId)
         resultId = submissionFeedbackDetail.save(db)
+        # 更新SubmissionFeedBack
+        submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
+                                                                 submissionFeedBackId).first()
+        submissionFeedback.score_get -= submissionFeedbackDetail.score_get
+        submissionFeedback.score_total -= submissionFeedbackDetail.score_sum
+        submissionFeedback.update(db)
         response = jsonify({
             'code': 200,
             'data': {'res': True},
@@ -916,6 +922,12 @@ def updateSubmissionFeedBackDetail():
         if scoreGet and scoreGet != '' and scoreGet != ' ':
             submissionFeedBackDetail.score_get = scoreGet
         resultId = submissionFeedBackDetail.update(db)
+        # 更新SubmissionFeedBack
+        submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
+                                                                 feedbackDetailId).first()
+        submissionFeedback.score_get -= submissionFeedBackDetail.score_get
+        submissionFeedback.score_total -= submissionFeedBackDetail.score_sum
+        submissionFeedback.update(db)
         response = jsonify({
             'code': 200,
             'data': {
@@ -945,10 +957,18 @@ def deleteSubmissionFeedBackDetail():
 
     # 查询特定的 SubmissionFeedBack
     submissionFeedbackDetail = SubmissionFeedBackDetail.query(db).filter("id = %s", submissionFeedBackDetailId).first()
+
     if submissionFeedbackDetail:
+
         # 构建反馈框架
         result = submissionFeedbackDetail.delete(db)
         if result:
+            # 更新SubmissionFeedBack
+            submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
+                                                                     submissionFeedbackDetail.submission_feedback_id).first()
+            submissionFeedback.score_get -= submissionFeedbackDetail.score_get
+            submissionFeedback.score_total -= submissionFeedbackDetail.score_sum
+            submissionFeedback.update(db)
             response = jsonify({
                 'code': 200,
                 'data': {'res': result},
@@ -956,6 +976,7 @@ def deleteSubmissionFeedBackDetail():
             })
             response = set_cors_headers(response=response)
             return response
+
         response = jsonify({
             'code': 500,
             'data': {'res': result},
