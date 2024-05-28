@@ -79,5 +79,3 @@ def set_cors_headers(response, origin='*'):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     response.headers['Access-Control-Allow-Credentials'] = 'true'  # 如果需要处理 cookies
     return response
-
-myBcryptEncoder("123456")

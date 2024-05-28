@@ -168,7 +168,7 @@ def getByStudentId():
     print("getByStudentId:" + "查询studentId:======>" + studentId)
     # 获取个人选择的教学课程
     # studentId = int(studentId)
-    enrollmentList = Enrollment.query(db).filter(" student_id = %s and status != 0", studentId).all()
+    enrollmentList = Enrollment.query(db).filter(" student_id = %s ", studentId).all()
     # 获取id列表
     if enrollmentList:
         enrollmentLectureIdList = []
@@ -228,7 +228,7 @@ def getAssignmentByStudentId():
     studentId = request.form.get('student_id')
     print("getAssignmentByStudentId:" + "查询studentId:======>" + studentId)
     # 注册课程列表
-    enrollmentList = Enrollment.query(db).filter("student_id = %s", studentId).all()
+    enrollmentList = Enrollment.query(db).filter("student_id = %s ", studentId).all()
     if enrollmentList:
         # 构建id列表
         enrollmentLectureIdList = []
@@ -330,7 +330,7 @@ def findAllLecture():
             # 课程map
             courseId = course.id
             # 查询教学课程
-            lectureList = Lecture.query(db).filter("course_id = %s", courseId).filter(" is_delete = 0").all()
+            lectureList = Lecture.query(db).filter("course_id = %s", courseId).all()
             if lectureList:
                 # 查询对应的教师
                 for lecture in lectureList:
@@ -367,8 +367,7 @@ def submitWork():
     file_path = request.form.get('file_path')
     if submit_time != '' and submit_time != ' ' and submit_time is not None:
         submission = Submission(title=title, lecture_id=lectureId, student_id=studentId, submit_time=submit_time,
-                                file_path=file_path
-                                )
+                                file_path=file_path)
     else:
         submission = Submission(title=title, lecture_id=lectureId, student_id=studentId, file_path=file_path,
                                 submit_time=datetime.datetime.now())
@@ -876,9 +875,13 @@ def addSubmissionFeedBackDetail():
         # 更新SubmissionFeedBack
         submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
                                                                  submissionFeedBackId).first()
-        submissionFeedback.score_get -= submissionFeedbackDetail.score_get
-        submissionFeedback.score_total -= submissionFeedbackDetail.score_sum
+        # add
+        submissionFeedback.score_get += submissionFeedbackDetail.score_get
+        submissionFeedback.score_total += submissionFeedbackDetail.score_sum
+        # provisional_total  update
+        submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
         submissionFeedback.update(db)
+
         response = jsonify({
             'code': 200,
             'data': {'res': True},
@@ -924,9 +927,12 @@ def updateSubmissionFeedBackDetail():
         resultId = submissionFeedBackDetail.update(db)
         # 更新SubmissionFeedBack
         submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
-                                                                 feedbackDetailId).first()
-        submissionFeedback.score_get -= submissionFeedBackDetail.score_get
-        submissionFeedback.score_total -= submissionFeedBackDetail.score_sum
+                                                                 submissionFeedBackDetail.submission_feedback_id).first()
+        # score_get abd score_total need to change
+        submissionFeedback.score_get += (submissionFeedBackDetail.score_get - submissionFeedback.score_get)
+        submissionFeedback.score_total += (submissionFeedBackDetail.score_sum - submissionFeedback.score_total)
+        # provisional_total  update
+        submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
         submissionFeedback.update(db)
         response = jsonify({
             'code': 200,
@@ -968,6 +974,8 @@ def deleteSubmissionFeedBackDetail():
                                                                      submissionFeedbackDetail.submission_feedback_id).first()
             submissionFeedback.score_get -= submissionFeedbackDetail.score_get
             submissionFeedback.score_total -= submissionFeedbackDetail.score_sum
+            # provisional_total  update
+            submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
             submissionFeedback.update(db)
             response = jsonify({
                 'code': 200,
