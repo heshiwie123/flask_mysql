@@ -110,7 +110,7 @@ class Lecture(BaseModel, SerializerMixin):
 class Enrollment(BaseModel, SerializerMixin):
     __tablename__ = 'enrollment'
 
-    def __init__(self, academic_year, lecture_id, student_id, level=0, status=0, **entries):
+    def __init__(self, academic_year, lecture_id, student_id, level=0, status=1, **entries):
         super().__init__(**entries)
         self.level = level
         self.academic_year = academic_year
