@@ -1,4 +1,6 @@
 # flask路由，返回json相关
+import copy
+
 from flask import request, jsonify, Flask, send_from_directory, Response, make_response
 
 # 关于跨域，不允许使用扩展库flask_cors 的情况下
@@ -926,7 +928,8 @@ def addSubmissionFeedBackDetail():
         # provisional_total  update
         submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
         submissionFeedback.update(db)
-
+        # 确认更新
+        localUpdateSubmissionFeedBack(submissionFeedbackDetail.submission_feedback_id)
         response = jsonify({
             'code': 200,
             'data': {'res': True},
@@ -942,6 +945,26 @@ def addSubmissionFeedBackDetail():
         })
         response = set_cors_headers(response=response)
         return response
+
+
+def localUpdateSubmissionFeedBack(submission_feedback_id):
+    submissionFeedBack = SubmissionFeedBack.query(db).filter(" id = %s", submission_feedback_id).first()
+    if submissionFeedBack:
+        submissionFeedBackDetailList = SubmissionFeedBackDetail.query(db).filter(" submission_feedback_id = %s",
+                                                                                 submission_feedback_id).all()
+        if submissionFeedBackDetailList:
+            sumGet = 0
+            sumTotal = 0
+            for submissionFeedBackDetail in submissionFeedBackDetailList:
+                sumGet += submissionFeedBackDetail.score_get
+                sumTotal += submissionFeedBackDetail.score_sum
+            submissionFeedBack.score_total = sumTotal
+            submissionFeedBack.score_get = sumGet
+            submissionFeedBack.provisional_total = sumGet/sumTotal
+            submissionFeedBack.update(db)
+
+            return True
+    return False
 
 
 # 更新用户反馈详细信息
@@ -960,6 +983,10 @@ def updateSubmissionFeedBackDetail():
         scoreGet = int(scoreGet)
 
     submissionFeedBackDetail = SubmissionFeedBackDetail.query(db).filter(" id  = %s ", feedbackDetailId).first()
+    # 需要进行深拷贝
+    submissionFeedBackDetailOriginSum = copy.copy(submissionFeedBackDetail.score_sum)
+    submissionFeedBackDetailOriginGet = copy.copy(submissionFeedBackDetail.score_get)
+
     if submissionFeedBackDetail:
         if criteria and criteria != '' and criteria != ' ':
             submissionFeedBackDetail.criteria = criteria
@@ -969,16 +996,25 @@ def updateSubmissionFeedBackDetail():
             submissionFeedBackDetail.score_sum = scoreSum
         if scoreGet and scoreGet != '' and scoreGet != ' ':
             submissionFeedBackDetail.score_get = scoreGet
-        resultId = submissionFeedBackDetail.update(db)
+
         # 更新SubmissionFeedBack
         submissionFeedback = SubmissionFeedBack.query(db).filter("id = %s",
                                                                  submissionFeedBackDetail.submission_feedback_id).first()
+        # 对应得原submissionFeedBackDetail
+
         # score_get abd score_total need to change
-        submissionFeedback.score_get += (submissionFeedBackDetail.score_get - submissionFeedback.score_get)
-        submissionFeedback.score_total += (submissionFeedBackDetail.score_sum - submissionFeedback.score_total)
+        submissionFeedback.score_get += (submissionFeedBackDetail.score_get - submissionFeedBackDetailOriginGet)
+        print((submissionFeedBackDetail.score_get - submissionFeedBackDetailOriginGet))
+        submissionFeedback.score_total += (
+                submissionFeedBackDetail.score_sum - submissionFeedBackDetailOriginSum)
+        print((
+                submissionFeedBackDetail.score_sum - submissionFeedBackDetailOriginSum))
         # provisional_total  update
         submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
         submissionFeedback.update(db)
+        resultId = submissionFeedBackDetail.update(db)
+        # 确认更新
+        localUpdateSubmissionFeedBack(submissionFeedBackDetail.submission_feedback_id)
         response = jsonify({
             'code': 200,
             'data': {
@@ -1022,6 +1058,8 @@ def deleteSubmissionFeedBackDetail():
             # provisional_total  update
             submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
             submissionFeedback.update(db)
+            # 确认更新
+            localUpdateSubmissionFeedBack(submissionFeedbackDetail.submission_feedback_id)
             response = jsonify({
                 'code': 200,
                 'data': {'res': result},
