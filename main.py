@@ -709,6 +709,51 @@ def updateAssignment():
         return response
 
 
+# (查看已经布置得作业)
+@app.route('/assignment/getAllAssignmentByInstructorId', methods=['POST'])
+def getAllAssignmentByInstructorId():
+    instructorId = request.form.get('instructor_id')
+
+    # if instructor
+    instructor = Instructor.query(db).filter("id = %s", instructorId).first()
+
+    if instructor:
+        luctureList = Lecture.query(db).filter("instructor_id = %s", instructorId).all()
+        if luctureList:
+            # 遍历
+            resultList = []
+            for lecture in luctureList:
+                assignmentList = Assignment.query(db).filter("lecture_id = %s", lecture.id).all()
+                assignmentList = myToDir(assignmentList)
+                perResult = {"lectureName": lecture.lecture_name, "assignmentList": assignmentList}
+                resultList.append(perResult)
+            #     normal
+            response = jsonify({
+                'code': 200,
+                'data': {'resultList': resultList},
+                'msg': 'get it!'
+            })
+            response = set_cors_headers(response=response)
+            return response
+        #
+        response = jsonify({
+            'code': 500,
+            'data': {'resultList': ''},
+            'msg': 'this instructor don not have any lecture'
+        })
+        response = set_cors_headers(response=response)
+        return response
+
+    #
+    response = jsonify({
+        'code': 500,
+        'data': {'resultList': False},
+        'msg': 'Instructor don not exits'
+    })
+    response = set_cors_headers(response=response)
+    return response
+
+
 # 访问学生的提交作业
 @app.route('/submission/getsubmitWorkByInstructorId', methods=['POST'])
 def getsubmitWorkByInstructorId():
