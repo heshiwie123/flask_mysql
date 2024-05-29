@@ -1004,11 +1004,10 @@ def updateSubmissionFeedBackDetail():
 
         # score_get abd score_total need to change
         submissionFeedback.score_get += (submissionFeedBackDetail.score_get - submissionFeedBackDetailOriginGet)
-        print((submissionFeedBackDetail.score_get - submissionFeedBackDetailOriginGet))
+
         submissionFeedback.score_total += (
                 submissionFeedBackDetail.score_sum - submissionFeedBackDetailOriginSum)
-        print((
-                submissionFeedBackDetail.score_sum - submissionFeedBackDetailOriginSum))
+
         # provisional_total  update
         submissionFeedback.provisional_total = submissionFeedback.score_get / submissionFeedback.score_total
         submissionFeedback.update(db)
