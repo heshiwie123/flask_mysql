@@ -4,7 +4,7 @@
 
 Windows/Linux: Ctrl + Shift + -
 macOS: ⌘ + Shift + -
-展开所有代码块: \n
+展开所有代码块: 
 
 
 Windows/Linux: Ctrl + Shift + +
